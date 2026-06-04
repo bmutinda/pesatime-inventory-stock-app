@@ -3,17 +3,12 @@
     {
       "name": "Default",
       "files": [
-        "android/app/src/main/AndroidManifest.xml",
-        "android/app/src/main/kotlin/com/pesatime/pos/owner/MainActivity.kt",
-        "ios/Podfile",
-        "lib/screens/home/index.dart",
         ".vscode/changelists.json",
-        "ios/Runner.xcodeproj/project.pbxproj",
-        "ios/Runner.xcworkspace/contents.xcworkspacedata",
-        "ios/Podfile.lock",
-        "pubspec.yaml",
         "lib/main.dart",
-        "lib/widgets/cards.dart"
+        "assets/images/logo.png",
+        "lib/helpers/colors.dart",
+        "lib/screens/login/index.dart",
+        "pubspec.yaml"
       ]
     }
   ],
