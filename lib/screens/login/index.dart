@@ -112,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               const SizedBox(height: 26),
                               TextButton(
-                                onPressed: () {},
+                                onPressed: _showManagerContact,
                                 child: const Text(
                                   'Forgot PIN? Contact manager',
                                   style: TextStyle(
@@ -135,6 +135,47 @@ class _LoginScreenState extends State<LoginScreen> {
           },
         ),
       ),
+    );
+  }
+
+  void _showManagerContact() {
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          title: const Text(
+            'Contact manager',
+            style: TextStyle(
+              color: AppColors.darkText,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          content: const Text(
+            'Ask your manager to reset your stock taking PIN before signing in.',
+            style: TextStyle(
+              color: AppColors.mutedText,
+              fontSize: 16,
+              height: 1.35,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Close',
+                style: TextStyle(
+                  color: AppColors.appBlue,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

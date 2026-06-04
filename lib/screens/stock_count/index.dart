@@ -200,6 +200,9 @@ class _StockCountScreenState extends State<_StockCountScreen> {
                         isOpening: _isOpening,
                         onDecrease: () => _changeQuantity(index, -1),
                         onIncrease: () => _changeQuantity(index, 1),
+                        onSave: () => _saveItem(index),
+                        onReasonSelected: (reason) =>
+                            _selectReason(index, reason),
                       ),
                       const SizedBox(height: 14),
                     ],
@@ -243,6 +246,26 @@ class _StockCountScreenState extends State<_StockCountScreen> {
     setState(() {
       final int nextValue = _items[index].quantity + change;
       _items[index].quantity = nextValue < 0 ? 0 : nextValue;
+      _items[index].saved = false;
+      if (!_isOpening) {
+        _items[index].variance =
+            _items[index].quantity - _items[index].expected;
+        if (_items[index].variance == 0) {
+          _items[index].reason = null;
+        }
+      }
+    });
+  }
+
+  void _saveItem(int index) {
+    setState(() {
+      _items[index].saved = true;
+    });
+  }
+
+  void _selectReason(int index, String reason) {
+    setState(() {
+      _items[index].reason = reason;
     });
   }
 }
@@ -280,10 +303,101 @@ class _StockCountHeader extends StatelessWidget {
             ),
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () => _showSessionOptions(context),
             icon: const Icon(Icons.more_vert, color: AppColors.darkText),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showSessionOptions(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Session options',
+                  style: TextStyle(
+                    color: AppColors.darkText,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _OptionTile(
+                  icon: Icons.info_outline,
+                  title: 'Session details',
+                  subtitle: 'Today, Jun 4',
+                  onTap: () => Navigator.of(context).pop(),
+                ),
+                _OptionTile(
+                  icon: Icons.close,
+                  title: 'Close options',
+                  subtitle: 'Return to stock count',
+                  onTap: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _OptionTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _OptionTile({
+    Key? key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        width: 42,
+        height: 42,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAF3FF),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: AppColors.appBlue),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          color: AppColors.darkText,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(
+          color: AppColors.mutedText,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -481,6 +595,8 @@ class _CountItemCard extends StatelessWidget {
   final bool isOpening;
   final VoidCallback onDecrease;
   final VoidCallback onIncrease;
+  final VoidCallback onSave;
+  final ValueChanged<String> onReasonSelected;
 
   const _CountItemCard({
     Key? key,
@@ -488,6 +604,8 @@ class _CountItemCard extends StatelessWidget {
     required this.isOpening,
     required this.onDecrease,
     required this.onIncrease,
+    required this.onSave,
+    required this.onReasonSelected,
   }) : super(key: key);
 
   @override
@@ -561,16 +679,19 @@ class _CountItemCard extends StatelessWidget {
                 onIncrease: onIncrease,
               ),
               const Spacer(),
-              _SaveButton(onPressed: () {}),
+              _SaveButton(onPressed: onSave),
             ],
           ),
-          if (isOpening && item.saved) ...[
+          if (item.saved) ...[
             const SizedBox(height: 14),
             const _SavedLabel(),
           ],
           if (!isOpening && item.variance != 0) ...[
             const SizedBox(height: 14),
-            _ReasonSelector(value: item.reason),
+            _ReasonSelector(
+              value: item.reason,
+              onSelected: onReasonSelected,
+            ),
           ],
         ],
       ),
@@ -730,8 +851,13 @@ class _VarianceBadge extends StatelessWidget {
 
 class _ReasonSelector extends StatelessWidget {
   final String? value;
+  final ValueChanged<String> onSelected;
 
-  const _ReasonSelector({Key? key, this.value}) : super(key: key);
+  const _ReasonSelector({
+    Key? key,
+    this.value,
+    required this.onSelected,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -747,32 +873,109 @@ class _ReasonSelector extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(7),
-            border: Border.all(color: const Color(0xFFD0D7E2)),
+        InkWell(
+          onTap: () => _showReasonSheet(context),
+          borderRadius: BorderRadius.circular(7),
+          child: Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(7),
+              border: Border.all(color: const Color(0xFFD0D7E2)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    value ?? 'Add reason',
+                    style: TextStyle(
+                      color: value == null
+                          ? AppColors.inputIcon
+                          : AppColors.darkText,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.keyboard_arrow_down,
+                  color: AppColors.mutedText,
+                ),
+              ],
+            ),
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  value ?? 'Add reason',
+        ),
+      ],
+    );
+  }
+
+  void _showReasonSheet(BuildContext context) {
+    const List<String> reasons = [
+      'Damaged bottle',
+      'Spillage',
+      'Staff meal',
+      'Supplier return',
+      'Wrong opening count',
+    ];
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Variance reason',
                   style: TextStyle(
-                    color: value == null
-                        ? AppColors.inputIcon
-                        : AppColors.darkText,
+                    color: AppColors.darkText,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Select why the closing count differs.',
+                  style: TextStyle(
+                    color: AppColors.mutedText,
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
-              const Icon(Icons.keyboard_arrow_down, color: AppColors.mutedText),
-            ],
+                const SizedBox(height: 12),
+                for (final reason in reasons)
+                  ListTile(
+                    onTap: () {
+                      onSelected(reason);
+                      Navigator.of(context).pop();
+                    },
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      reason,
+                      style: const TextStyle(
+                        color: AppColors.darkText,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    trailing: value == reason
+                        ? const Icon(
+                            Icons.check_circle,
+                            color: AppColors.success,
+                          )
+                        : null,
+                  ),
+              ],
+            ),
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -1206,11 +1409,11 @@ class _CountItem {
   final String name;
   final String sku;
   int quantity;
-  final bool saved;
+  bool saved;
   final int expected;
   final int opening;
-  final int variance;
-  final String? reason;
+  int variance;
+  String? reason;
 
   _CountItem({
     required this.name,
