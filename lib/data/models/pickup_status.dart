@@ -1,0 +1,1 @@
+enum PickupStatus { PICKED, PENDING }
