@@ -41,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
-        statusBarColor: AppColors.appBlue,
+        statusBarColor: Color(0xFF0055C8),
         statusBarIconBrightness: Brightness.light,
         statusBarBrightness: Brightness.dark,
       ),
@@ -129,9 +129,9 @@ class _HomeHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 12),
       decoration: const BoxDecoration(
-        color: AppColors.appBlue,
+        color: Color(0xFFEAF3FF),
         border: Border(
-          bottom: BorderSide(color: Color(0xFF0062D6)),
+          bottom: BorderSide(color: Color(0xFFC7DCFF)),
         ),
       ),
       child: Row(
@@ -141,7 +141,7 @@ class _HomeHeader extends StatelessWidget {
           const Text(
             'Home',
             style: TextStyle(
-              color: Colors.white,
+              color: AppColors.darkText,
               fontSize: 20,
               fontWeight: FontWeight.w800,
             ),
@@ -152,14 +152,14 @@ class _HomeHeader extends StatelessWidget {
             height: 44,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.appBlue,
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0x66FFFFFF)),
+              border: Border.all(color: const Color(0xFF9FC3FF)),
             ),
             child: const Text(
               'BM',
               style: TextStyle(
-                color: AppColors.appBlue,
+                color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
               ),
@@ -374,23 +374,26 @@ class _SessionCard extends StatelessWidget {
               ),
               const Spacer(),
               SizedBox(
-                height: 50,
+                height: 38,
                 child: OutlinedButton(
                   onPressed: () {},
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.appBlue,
+                    minimumSize: const Size(0, 38),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     side: const BorderSide(
                       color: AppColors.appBlue,
-                      width: 1.5,
+                      width: 1.2,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(7),
                     ),
                   ),
                   child: Text(
                     session.action,
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -540,15 +543,15 @@ class _BottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFFF2F7FF),
+        color: Colors.white,
         border: Border(
-          top: BorderSide(color: Color(0xFFCFE0FF)),
+          top: BorderSide(color: Color(0xFFD9E2F0)),
         ),
         boxShadow: [
           BoxShadow(
-            color: Color(0x140875F8),
-            blurRadius: 18,
-            offset: Offset(0, -6),
+            color: Color(0x12000000),
+            blurRadius: 16,
+            offset: Offset(0, -5),
           ),
         ],
       ),
@@ -606,21 +609,26 @@ class _BottomNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color color = selected ? Colors.white : AppColors.mutedText;
+    final Color color = selected ? AppColors.appBlue : AppColors.mutedText;
 
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
-      child: Container(
+      child: SizedBox(
         width: 86,
         height: 64,
-        decoration: BoxDecoration(
-          color: selected ? AppColors.appBlue : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Container(
+              width: 28,
+              height: 3,
+              decoration: BoxDecoration(
+                color: selected ? AppColors.appBlue : Colors.transparent,
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+            const SizedBox(height: 8),
             Icon(selected ? selectedIcon : icon, color: color, size: 26),
             const SizedBox(height: 4),
             Text(

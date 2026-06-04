@@ -3,8 +3,8 @@
     {
       "name": "Default",
       "files": [
-        "lib/screens/home/index.dart",
-        ".vscode/changelists.json"
+        ".vscode/changelists.json",
+        "lib/screens/home/index.dart"
       ]
     }
   ],
