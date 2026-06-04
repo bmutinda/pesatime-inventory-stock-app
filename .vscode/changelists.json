@@ -3,12 +3,8 @@
     {
       "name": "Default",
       "files": [
-        ".vscode/changelists.json",
-        "lib/main.dart",
-        "assets/images/logo.png",
-        "lib/helpers/colors.dart",
-        "lib/screens/login/index.dart",
-        "pubspec.yaml"
+        "lib/screens/home/index.dart",
+        ".vscode/changelists.json"
       ]
     }
   ],
