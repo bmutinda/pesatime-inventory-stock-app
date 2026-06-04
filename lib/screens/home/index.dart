@@ -19,6 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
       type: 'Opening stock',
       status: 'In progress',
       action: 'Continue',
+      routeName: '/opening-stock',
       itemsSaved: 12,
       totalItems: 30,
       progress: 0.4,
@@ -30,10 +31,45 @@ class _HomeScreenState extends State<HomeScreen> {
       type: 'Closing stock',
       status: 'Ready',
       action: 'Start',
+      routeName: '/closing-stock',
       itemsSaved: 0,
       totalItems: 30,
       progress: 0,
       statusColor: AppColors.success,
+    ),
+  ];
+
+  final List<_HistorySession> _history = const [
+    _HistorySession(
+      title: 'Evening Count',
+      store: 'Bar Store',
+      status: 'SUBMITTED',
+      timestamp: 'Submitted today, 8:14 PM',
+      items: 30,
+      variances: 4,
+      action: 'View',
+      statusColor: AppColors.appBlue,
+    ),
+    _HistorySession(
+      title: 'Morning Count',
+      store: 'Main Store',
+      status: 'APPROVED',
+      timestamp: 'Approved Jun 4, 10:02 AM',
+      items: 30,
+      variances: 0,
+      action: 'View',
+      statusColor: AppColors.success,
+    ),
+    _HistorySession(
+      title: 'Weekend Count',
+      store: 'Kitchen',
+      status: 'REJECTED',
+      timestamp: 'Rejected Jun 3, 3:47 PM',
+      items: 30,
+      variances: 2,
+      action: 'Review',
+      reason: 'Recount damaged items',
+      statusColor: Color(0xFFE11D48),
     ),
   ];
 
@@ -50,60 +86,9 @@ class _HomeScreenState extends State<HomeScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              const _HomeHeader(),
+              _HomeHeader(title: _currentTitle),
               Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
-                  children: [
-                    const Text(
-                      'Stock taking',
-                      style: TextStyle(
-                        color: AppColors.darkText,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'View assigned counts and submit stock quantities.',
-                      style: TextStyle(
-                        color: AppColors.mutedText,
-                        fontSize: 17,
-                        height: 1.35,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    const _TodaySummary(),
-                    const SizedBox(height: 26),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Assigned sessions',
-                          style: TextStyle(
-                            color: AppColors.darkText,
-                            fontSize: 21,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        Text(
-                          '2 active',
-                          style: TextStyle(
-                            color: AppColors.appBlue,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    for (final session in _sessions) ...[
-                      _SessionCard(session: session),
-                      const SizedBox(height: 18),
-                    ],
-                    const _RecentActivityCard(),
-                  ],
-                ),
+                child: _buildSelectedTab(),
               ),
             ],
           ),
@@ -119,10 +104,32 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  String get _currentTitle {
+    if (_selectedIndex == 1) {
+      return 'History';
+    }
+    if (_selectedIndex == 2) {
+      return 'Profile';
+    }
+    return 'Home';
+  }
+
+  Widget _buildSelectedTab() {
+    if (_selectedIndex == 1) {
+      return _HistoryTab(history: _history);
+    }
+    if (_selectedIndex == 2) {
+      return const _ProfileTab();
+    }
+    return _HomeTab(sessions: _sessions);
+  }
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({Key? key}) : super(key: key);
+  final String title;
+
+  const _HomeHeader({Key? key, required this.title}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -138,9 +145,9 @@ class _HomeHeader extends StatelessWidget {
         children: [
           const SizedBox(width: 44),
           const Spacer(),
-          const Text(
-            'Home',
-            style: TextStyle(
+          Text(
+            title,
+            style: const TextStyle(
               color: AppColors.darkText,
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -167,6 +174,68 @@ class _HomeHeader extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _HomeTab extends StatelessWidget {
+  final List<_StockSession> sessions;
+
+  const _HomeTab({Key? key, required this.sessions}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
+      children: [
+        const Text(
+          'Stock taking',
+          style: TextStyle(
+            color: AppColors.darkText,
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'View assigned counts and submit stock quantities.',
+          style: TextStyle(
+            color: AppColors.mutedText,
+            fontSize: 17,
+            height: 1.35,
+          ),
+        ),
+        const SizedBox(height: 24),
+        const _TodaySummary(),
+        const SizedBox(height: 26),
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Assigned sessions',
+              style: TextStyle(
+                color: AppColors.darkText,
+                fontSize: 21,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            Text(
+              '2 active',
+              style: TextStyle(
+                color: AppColors.appBlue,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        for (final session in sessions) ...[
+          _SessionCard(session: session),
+          const SizedBox(height: 18),
+        ],
+        const _RecentActivityCard(),
+      ],
     );
   }
 }
@@ -376,7 +445,9 @@ class _SessionCard extends StatelessWidget {
               SizedBox(
                 height: 38,
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () => Navigator.of(context).pushNamed(
+                    session.routeName,
+                  ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.appBlue,
                     minimumSize: const Size(0, 38),
@@ -529,6 +600,392 @@ class _RecentActivityCard extends StatelessWidget {
   }
 }
 
+class _HistoryTab extends StatelessWidget {
+  final List<_HistorySession> history;
+
+  const _HistoryTab({Key? key, required this.history}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
+      children: [
+        const Text(
+          'Stock session history',
+          style: TextStyle(
+            color: AppColors.darkText,
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          'Track submitted and completed counts.',
+          style: TextStyle(
+            color: AppColors.mutedText,
+            fontSize: 16,
+            height: 1.35,
+          ),
+        ),
+        const SizedBox(height: 18),
+        const _SearchBox(hintText: 'Search history'),
+        const SizedBox(height: 16),
+        const _HistoryFilterRow(),
+        const SizedBox(height: 16),
+        const _MonthSelector(),
+        const SizedBox(height: 16),
+        for (final item in history) ...[
+          _HistoryCard(item: item),
+          const SizedBox(height: 14),
+        ],
+      ],
+    );
+  }
+}
+
+class _SearchBox extends StatelessWidget {
+  final String hintText;
+
+  const _SearchBox({Key? key, required this.hintText}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: const TextStyle(
+          color: AppColors.inputIcon,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
+        prefixIcon: const Icon(Icons.search, color: AppColors.mutedText),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFFD0D7E2)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.appBlue, width: 1.4),
+        ),
+      ),
+    );
+  }
+}
+
+class _HistoryFilterRow extends StatelessWidget {
+  const _HistoryFilterRow({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: [
+        _FilterChip(label: 'All', selected: true),
+        SizedBox(width: 10),
+        _FilterChip(label: 'Submitted'),
+        SizedBox(width: 10),
+        _FilterChip(label: 'Approved'),
+        SizedBox(width: 10),
+        _FilterChip(label: 'Rejected'),
+      ],
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+
+  const _FilterChip({Key? key, required this.label, this.selected = false})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        height: 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? AppColors.appBlue : const Color(0xFFF7F9FC),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected ? AppColors.appBlue : const Color(0xFFD0D7E2),
+          ),
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: selected ? Colors.white : AppColors.darkText,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MonthSelector extends StatelessWidget {
+  const _MonthSelector({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFD0D7E2)),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.calendar_month_outlined, color: AppColors.mutedText),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'This month',
+              style: TextStyle(
+                color: AppColors.darkText,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Icon(Icons.keyboard_arrow_down, color: AppColors.mutedText),
+        ],
+      ),
+    );
+  }
+}
+
+class _HistoryCard extends StatelessWidget {
+  final _HistorySession item;
+
+  const _HistoryCard({Key? key, required this.item}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final bool rejected = item.status == 'REJECTED';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFD8DEE8)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0F000000),
+            blurRadius: 14,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      style: const TextStyle(
+                        color: AppColors.darkText,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _IconText(
+                        icon: Icons.location_on_outlined, text: item.store),
+                    const SizedBox(height: 6),
+                    _IconText(
+                      icon: rejected ? Icons.cancel : Icons.access_time,
+                      text: item.timestamp,
+                    ),
+                  ],
+                ),
+              ),
+              _StatusPill(text: item.status, color: item.statusColor),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _MiniChip(
+                icon: Icons.inventory_2_outlined,
+                text: '${item.items} items',
+              ),
+              const SizedBox(width: 10),
+              _MiniChip(
+                icon: item.variances == 0
+                    ? Icons.check_circle_outline
+                    : Icons.warning_amber_outlined,
+                text: '${item.variances} variances',
+              ),
+              const Spacer(),
+              SizedBox(
+                height: 38,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pushNamed(
+                    '/history-detail',
+                    arguments: {
+                      'title': item.title,
+                      'store': item.store,
+                      'status': item.status,
+                      'timestamp': item.timestamp,
+                      'items': item.items,
+                      'variances': item.variances,
+                      'reason': item.reason,
+                      'statusColor': item.statusColor,
+                    },
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor:
+                        rejected ? const Color(0xFFE11D48) : AppColors.appBlue,
+                    minimumSize: const Size(0, 38),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    side: BorderSide(
+                      color: rejected
+                          ? const Color(0xFFE11D48)
+                          : AppColors.appBlue,
+                      width: 1.2,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                  ),
+                  child: Text(
+                    item.action,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (item.reason != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              'Reason: ${item.reason}',
+              style: const TextStyle(
+                color: Color(0xFFE11D48),
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileTab extends StatelessWidget {
+  const _ProfileTab({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
+      children: const [
+        _ProfileHeaderCard(),
+        SizedBox(height: 14),
+        _LogoutButton(),
+      ],
+    );
+  }
+}
+
+class _ProfileHeaderCard extends StatelessWidget {
+  const _ProfileHeaderCard({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFF),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFD0D7E2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: AppColors.appBlue,
+              shape: BoxShape.circle,
+            ),
+            child: const Text(
+              'BM',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Boniface Mutinda',
+                  style: TextStyle(
+                    color: AppColors.darkText,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LogoutButton extends StatelessWidget {
+  const _LogoutButton({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: OutlinedButton(
+        onPressed: () => Navigator.of(context).pushReplacementNamed('/'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFFE11D48),
+          side: const BorderSide(color: Color(0xFFE11D48), width: 1.2),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        child: const Text(
+          'Sign out',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+        ),
+      ),
+    );
+  }
+}
+
 class _BottomNavBar extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onChanged;
@@ -652,6 +1109,7 @@ class _StockSession {
   final String type;
   final String status;
   final String action;
+  final String routeName;
   final int itemsSaved;
   final int totalItems;
   final double progress;
@@ -663,9 +1121,34 @@ class _StockSession {
     required this.type,
     required this.status,
     required this.action,
+    required this.routeName,
     required this.itemsSaved,
     required this.totalItems,
     required this.progress,
+    required this.statusColor,
+  });
+}
+
+class _HistorySession {
+  final String title;
+  final String store;
+  final String status;
+  final String timestamp;
+  final int items;
+  final int variances;
+  final String action;
+  final String? reason;
+  final Color statusColor;
+
+  const _HistorySession({
+    required this.title,
+    required this.store,
+    required this.status,
+    required this.timestamp,
+    required this.items,
+    required this.variances,
+    required this.action,
+    this.reason,
     required this.statusColor,
   });
 }

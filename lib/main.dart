@@ -1,8 +1,11 @@
 import 'package:google_fonts/google_fonts.dart';
 import 'package:inventory_app/helpers/colors.dart';
 import 'package:inventory_app/helpers/navigator_service.dart';
+import 'package:inventory_app/screens/history_detail/index.dart';
 import 'package:inventory_app/screens/home/index.dart';
 import 'package:inventory_app/screens/login/index.dart';
+import 'package:inventory_app/screens/stock_count/index.dart';
+import 'package:inventory_app/screens/submission_success/index.dart';
 import 'package:flutter/material.dart' hide Router;
 
 void main() {
@@ -24,6 +27,11 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),
+        '/opening-stock': (context) => const OpeningStockScreen(),
+        '/closing-stock': (context) => const ClosingStockScreen(),
+        '/closing-review': (context) => const ClosingReviewScreen(),
+        '/history-detail': (context) => const HistoryDetailScreen(),
+        '/submission-success': (context) => const SubmissionSuccessScreen(),
       },
       theme: ThemeData(
         primarySwatch: Colors.blue,
