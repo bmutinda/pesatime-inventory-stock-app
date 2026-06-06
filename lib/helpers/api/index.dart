@@ -1,9 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:inventory_app/data/models/api_response.dart';
 import 'package:inventory_app/helpers/config/index.dart';
-import 'package:inventory_app/services/auth/index.dart';
+import 'package:inventory_app/helpers/prefs/shared_preferences.dart';
 import 'package:inventory_app/services/device/index.dart';
 
 abstract class ApiClient {
+  static const String authTokenKey = "auth_token";
+
   static final Dio _dio = Dio(
     BaseOptions(
       baseUrl: AppConfig.baseUrl,
@@ -17,7 +20,9 @@ abstract class ApiClient {
   )..interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final token = await AuthUtils.getToken();
+          final token = await SharedPreferencesManager.getString(
+            authTokenKey,
+          );
           final deviceId = await DeviceUtils.getDeviceId();
 
           if (token.isNotEmpty) {
@@ -106,5 +111,32 @@ abstract class ApiClient {
       queryParameters: queryParameters,
       options: options,
     );
+  }
+}
+
+abstract class ApiUtils {
+  static String readDioError(DioException error) {
+    final data = error.response?.data;
+    if (data is Map<String, dynamic>) {
+      final apiResponse = ApiResponse.fromJson(data);
+      if (apiResponse != null && apiResponse.message.isNotEmpty) {
+        return apiResponse.message;
+      }
+    }
+
+    return 'Unable to process request. Please try again.';
+  }
+
+  static String readString(Map<String, dynamic>? data, List<String> keys) {
+    if (data == null) return '';
+
+    for (final key in keys) {
+      final value = data[key];
+      if (value is String && value.isNotEmpty) {
+        return value;
+      }
+    }
+
+    return '';
   }
 }

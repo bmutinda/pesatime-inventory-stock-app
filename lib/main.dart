@@ -4,6 +4,7 @@ import 'package:inventory_app/helpers/navigator_service.dart';
 import 'package:inventory_app/screens/history_detail/index.dart';
 import 'package:inventory_app/screens/home/index.dart';
 import 'package:inventory_app/screens/login/index.dart';
+import 'package:inventory_app/screens/splash/index.dart';
 import 'package:inventory_app/screens/stock_count/index.dart';
 import 'package:inventory_app/screens/submission_success/index.dart';
 import 'package:flutter/material.dart' hide Router;
@@ -25,7 +26,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/': (context) => const LoginScreen(),
+        '/': (context) => const SplashScreen(),
+        '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),
         '/opening-stock': (context) => const OpeningStockScreen(),
         '/closing-stock': (context) => const ClosingStockScreen(),

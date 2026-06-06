@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:inventory_app/helpers/colors.dart';
+import 'package:inventory_app/services/auth/index.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -870,24 +871,51 @@ class _ProfileHeaderCard extends StatelessWidget {
   }
 }
 
-class _LogoutButton extends StatelessWidget {
+class _LogoutButton extends StatefulWidget {
   const _LogoutButton({Key? key}) : super(key: key);
+
+  @override
+  State<_LogoutButton> createState() => _LogoutButtonState();
+}
+
+class _LogoutButtonState extends State<_LogoutButton> {
+  bool _isSigningOut = false;
+
+  Future<void> _signOut() async {
+    setState(() {
+      _isSigningOut = true;
+    });
+
+    await AuthUtils.logout();
+
+    if (!mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+  }
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 48,
       child: OutlinedButton(
-        onPressed: () => Navigator.of(context).pushReplacementNamed('/'),
+        onPressed: _isSigningOut ? null : _signOut,
         style: OutlinedButton.styleFrom(
           foregroundColor: const Color(0xFFE11D48),
           side: const BorderSide(color: Color(0xFFE11D48), width: 1.2),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        child: const Text(
-          'Sign out',
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-        ),
+        child: _isSigningOut
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Color(0xFFE11D48),
+                ),
+              )
+            : const Text(
+                'Sign out',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+              ),
       ),
     );
   }

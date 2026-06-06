@@ -3,10 +3,14 @@
     {
       "name": "Default",
       "files": [
-        ".vscode/changelists.json",
-        "lib/helpers/api/index.dart",
         "lib/screens/login/index.dart",
-        "lib/services/device/index.dart"
+        "lib/services/auth/index.dart",
+        ".vscode/changelists.json",
+        "lib/data/models/api_response.dart",
+        "lib/helpers/api/index.dart",
+        "lib/main.dart",
+        "lib/screens/home/index.dart",
+        "lib/screens/splash/index.dart"
       ]
     }
   ],

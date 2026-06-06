@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:inventory_app/helpers/colors.dart';
+import 'package:inventory_app/services/auth/index.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -9,10 +10,64 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  bool _isPinHidden = true;
+  final TextEditingController _staffCodeController = TextEditingController();
+  final TextEditingController _pinController = TextEditingController();
 
-  void _signIn() {
-    Navigator.of(context).pushReplacementNamed('/home');
+  bool _isPinHidden = true;
+  bool _isSigningIn = false;
+
+  @override
+  void dispose() {
+    _staffCodeController.dispose();
+    _pinController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _signIn() async {
+    final staffCode = _staffCodeController.text.trim();
+    final pin = _pinController.text.trim();
+
+    if (staffCode.isEmpty || pin.isEmpty) {
+      _showError('Enter your staff code and PIN to continue.');
+      return;
+    }
+
+    setState(() {
+      _isSigningIn = true;
+    });
+
+    try {
+      await AuthUtils.login(
+        staffCode: staffCode,
+        pin: pin,
+      );
+
+      if (!mounted) return;
+      Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+    } on AuthException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError('Unable to sign in. Please try again.');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSigningIn = false;
+        });
+      }
+    }
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: const Color(0xFFE11D48),
+        ),
+      );
   }
 
   @override
@@ -52,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               const SizedBox(height: 14),
                               const Text(
-                                'Enter your PIN to\nview assigned sessions.',
+                                'Enter your staff code and PIN to\nview assigned sessions.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: AppColors.mutedText,
@@ -63,17 +118,36 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               const SizedBox(height: 48),
                               _LoginTextField(
+                                controller: _staffCodeController,
+                                label: 'Staff Code',
+                                hintText: 'Enter your staff code',
+                                prefixIcon: Icons.person_outline,
+                                textInputAction: TextInputAction.next,
+                                enabled: !_isSigningIn,
+                              ),
+                              const SizedBox(height: 28),
+                              _LoginTextField(
+                                controller: _pinController,
                                 label: 'PIN',
                                 hintText: '••••',
                                 prefixIcon: Icons.lock_outline,
                                 keyboardType: TextInputType.number,
+                                textInputAction: TextInputAction.done,
                                 obscureText: _isPinHidden,
+                                enabled: !_isSigningIn,
+                                onSubmitted: (_) {
+                                  if (!_isSigningIn) {
+                                    _signIn();
+                                  }
+                                },
                                 suffixIcon: IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _isPinHidden = !_isPinHidden;
-                                    });
-                                  },
+                                  onPressed: _isSigningIn
+                                      ? null
+                                      : () {
+                                          setState(() {
+                                            _isPinHidden = !_isPinHidden;
+                                          });
+                                        },
                                   icon: Icon(
                                     _isPinHidden
                                         ? Icons.visibility_off_outlined
@@ -85,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               SizedBox(
                                 height: 64,
                                 child: ElevatedButton(
-                                  onPressed: _signIn,
+                                  onPressed: _isSigningIn ? null : _signIn,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColors.appBlue,
                                     foregroundColor: Colors.white,
@@ -94,13 +168,22 @@ class _LoginScreenState extends State<LoginScreen> {
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                   ),
-                                  child: const Text(
-                                    'Sign in',
-                                    style: TextStyle(
-                                      fontSize: 21,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
+                                  child: _isSigningIn
+                                      ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Text(
+                                          'Sign in',
+                                          style: TextStyle(
+                                            fontSize: 21,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
                                 ),
                               ),
                               const SizedBox(height: 26),
@@ -216,21 +299,29 @@ class _AppPurposeBadge extends StatelessWidget {
 }
 
 class _LoginTextField extends StatelessWidget {
+  final TextEditingController controller;
   final String label;
   final String hintText;
   final IconData prefixIcon;
+  final TextInputAction? textInputAction;
   final TextInputType? keyboardType;
   final bool obscureText;
+  final bool enabled;
   final Widget? suffixIcon;
+  final ValueChanged<String>? onSubmitted;
 
   const _LoginTextField({
     Key? key,
+    required this.controller,
     required this.label,
     required this.hintText,
     required this.prefixIcon,
+    this.textInputAction,
     this.keyboardType,
     this.obscureText = false,
+    this.enabled = true,
     this.suffixIcon,
+    this.onSubmitted,
   }) : super(key: key);
 
   @override
@@ -248,8 +339,12 @@ class _LoginTextField extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         TextField(
+          controller: controller,
+          enabled: enabled,
           obscureText: obscureText,
           keyboardType: keyboardType,
+          textInputAction: textInputAction,
+          onSubmitted: onSubmitted,
           style: const TextStyle(
             color: AppColors.darkText,
             fontSize: 19,
