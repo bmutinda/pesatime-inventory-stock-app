@@ -3,12 +3,8 @@
     {
       "name": "Default",
       "files": [
-        "pubspec.lock",
-        "pubspec.yaml",
-        "lib/helpers/api/index.dart",
         ".vscode/changelists.json",
-        "README.md",
-        "lib/helpers/config/index.dart"
+        "lib/screens/home/index.dart"
       ]
     }
   ],

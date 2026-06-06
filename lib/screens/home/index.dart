@@ -206,8 +206,6 @@ class _HomeTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
-        const _TodaySummary(),
-        const SizedBox(height: 26),
         const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -236,97 +234,6 @@ class _HomeTab extends StatelessWidget {
         ],
         const _RecentActivityCard(),
       ],
-    );
-  }
-}
-
-class _TodaySummary extends StatelessWidget {
-  const _TodaySummary({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFF),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFD0D7E2)),
-      ),
-      child: const Row(
-        children: [
-          _SummaryItem(
-            icon: Icons.inventory_2_outlined,
-            value: '30',
-            label: 'Items',
-          ),
-          _SummaryDivider(),
-          _SummaryItem(
-            icon: Icons.task_alt,
-            value: '12',
-            label: 'Saved',
-          ),
-          _SummaryDivider(),
-          _SummaryItem(
-            icon: Icons.warning_amber_outlined,
-            value: '0',
-            label: 'Variances',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SummaryItem extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-
-  const _SummaryItem({
-    Key? key,
-    required this.icon,
-    required this.value,
-    required this.label,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Icon(icon, color: AppColors.appBlue, size: 24),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: const TextStyle(
-              color: AppColors.darkText,
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.mutedText,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SummaryDivider extends StatelessWidget {
-  const _SummaryDivider({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 60,
-      color: const Color(0xFFD8DEE8),
     );
   }
 }
