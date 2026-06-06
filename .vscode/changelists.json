@@ -3,9 +3,18 @@
     {
       "name": "Default",
       "files": [
-        "lib/screens/stock_count/index.dart",
-        "lib/screens/login/index.dart",
-        ".vscode/changelists.json"
+        ".vscode/changelists.json",
+        "lib/data/models/attendants.dart",
+        "lib/data/models/customer.dart",
+        "lib/data/models/payment_status.dart",
+        "lib/data/models/pickup_status.dart",
+        "pubspec.lock",
+        "pubspec.yaml",
+        "lib/helpers/prefs/shared_preferences.dart",
+        "lib/services/auth/index.dart",
+        "lib/data/models/user.dart",
+        "lib/data/models/api_response.dart",
+        "lib/helpers/api/index.dart"
       ]
     }
   ],
