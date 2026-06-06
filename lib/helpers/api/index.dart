@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:inventory_app/helpers/config/index.dart';
 import 'package:inventory_app/services/auth/index.dart';
+import 'package:inventory_app/services/device/index.dart';
 
 abstract class ApiClient {
   static final Dio _dio = Dio(
@@ -17,11 +18,19 @@ abstract class ApiClient {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           final token = await AuthUtils.getToken();
+          final deviceId = await DeviceUtils.getDeviceId();
 
           if (token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           } else {
             options.headers.remove('Authorization');
+          }
+
+          options.queryParameters['device_id'] = deviceId;
+
+          final data = options.data;
+          if (data is Map<String, dynamic>) {
+            data.putIfAbsent('device_id', () => deviceId);
           }
 
           return handler.next(options);

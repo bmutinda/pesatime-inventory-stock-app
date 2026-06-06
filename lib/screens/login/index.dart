@@ -52,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               const SizedBox(height: 14),
                               const Text(
-                                'Enter your staff code and PIN to\nview assigned sessions.',
+                                'Enter your PIN to\nview assigned sessions.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: AppColors.mutedText,
@@ -62,13 +62,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                               const SizedBox(height: 48),
-                              const _LoginTextField(
-                                label: 'Staff Code',
-                                hintText: 'Enter your staff code',
-                                prefixIcon: Icons.person_outline,
-                                textInputAction: TextInputAction.next,
-                              ),
-                              const SizedBox(height: 28),
                               _LoginTextField(
                                 label: 'PIN',
                                 hintText: '••••',
@@ -226,7 +219,6 @@ class _LoginTextField extends StatelessWidget {
   final String label;
   final String hintText;
   final IconData prefixIcon;
-  final TextInputAction? textInputAction;
   final TextInputType? keyboardType;
   final bool obscureText;
   final Widget? suffixIcon;
@@ -236,7 +228,6 @@ class _LoginTextField extends StatelessWidget {
     required this.label,
     required this.hintText,
     required this.prefixIcon,
-    this.textInputAction,
     this.keyboardType,
     this.obscureText = false,
     this.suffixIcon,
@@ -259,7 +250,6 @@ class _LoginTextField extends StatelessWidget {
         TextField(
           obscureText: obscureText,
           keyboardType: keyboardType,
-          textInputAction: textInputAction,
           style: const TextStyle(
             color: AppColors.darkText,
             fontSize: 19,
