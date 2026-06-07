@@ -92,6 +92,35 @@ abstract class StockSessionService {
     }
   }
 
+  static Future<void> submitClosingQty({
+    required String sessionId,
+    required String lineId,
+    required double closingQty,
+    String? varianceReason,
+  }) async {
+    try {
+      final response = await ApiClient.put<Map<String, dynamic>>(
+        'stock-sessions/$sessionId/items/$lineId/closing',
+        data: {
+          'closing_qty': closingQty,
+          if (varianceReason != null && varianceReason.isNotEmpty)
+            'variance_reason': varianceReason,
+        },
+      );
+      final apiResponse = ApiResponse.fromJson(response.data);
+
+      if (apiResponse == null || !apiResponse.success) {
+        throw Exception(
+          apiResponse?.message.isEmpty ?? true
+              ? 'Unable to save closing quantity.'
+              : apiResponse!.message,
+        );
+      }
+    } on DioException catch (error) {
+      throw Exception(ApiUtils.readDioError(error));
+    }
+  }
+
   static Future<List<StockSession>> _getSessions({
     required String path,
     required int limit,
