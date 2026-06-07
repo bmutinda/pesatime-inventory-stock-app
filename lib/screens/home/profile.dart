@@ -1,26 +1,86 @@
 part of 'index.dart';
 
-class _ProfileTab extends StatelessWidget {
+class _ProfileTab extends StatefulWidget {
   const _ProfileTab({Key? key}) : super(key: key);
+
+  @override
+  State<_ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends State<_ProfileTab> {
+  bool _isLoading = true;
+  User? _user;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    User? user;
+    String? errorMessage;
+
+    try {
+      user = await AuthUtils.getMe();
+    } catch (error) {
+      final message = error.toString().replaceFirst('Exception: ', '').trim();
+      errorMessage = message.isEmpty ? 'Unable to load profile.' : message;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _user = user;
+      _errorMessage = errorMessage;
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
-      children: const [
-        _ProfileHeaderCard(),
-        SizedBox(height: 14),
-        _LogoutButton(),
+      children: [
+        if (_isLoading)
+          const _ProfileLoadingCard()
+        else if (_errorMessage != null)
+          _ProfileErrorCard(
+            message: _errorMessage!,
+            onRetry: _loadProfile,
+          )
+        else if (_user != null)
+          _ProfileHeaderCard(user: _user!),
+        const SizedBox(height: 14),
+        const _LogoutButton(),
       ],
     );
   }
 }
 
 class _ProfileHeaderCard extends StatelessWidget {
-  const _ProfileHeaderCard({Key? key}) : super(key: key);
+  final User user;
+
+  const _ProfileHeaderCard({Key? key, required this.user}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final initials = user.name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .take(2)
+        .map((part) => part[0].toUpperCase())
+        .join();
+    final joinedText = user.dateCreated == null
+        ? null
+        : 'Joined ${formatHumanReadableDate(user.dateCreated!)}';
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -38,30 +98,161 @@ class _ProfileHeaderCard extends StatelessWidget {
               color: AppColors.appBlue,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.person,
-              color: Colors.white,
-              size: 30,
+            child: Text(
+              initials.isEmpty ? 'U' : initials,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
           const SizedBox(width: 14),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Signed in',
-                  style: TextStyle(
+                  user.name.isEmpty ? 'Signed in' : user.name,
+                  style: const TextStyle(
                     color: AppColors.darkText,
                     fontSize: 21,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
+                if (user.email.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    user.email,
+                    style: const TextStyle(
+                      color: Color(0xFF526070),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+                if (joinedText != null) ...[
+                  const SizedBox(height: 8),
+                  _ProfileMetaRow(
+                    icon: Icons.calendar_today,
+                    text: joinedText,
+                  ),
+                ],
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ProfileLoadingCard extends StatelessWidget {
+  const _ProfileLoadingCard({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 132,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFF),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFD0D7E2)),
+      ),
+      child: const CircularProgressIndicator(
+        color: AppColors.appBlue,
+        strokeWidth: 2.5,
+      ),
+    );
+  }
+}
+
+class _ProfileErrorCard extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _ProfileErrorCard({
+    Key? key,
+    required this.message,
+    required this.onRetry,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7F7),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFFECACA)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Profile unavailable',
+            style: TextStyle(
+              color: AppColors.darkText,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            message,
+            style: const TextStyle(
+              color: Color(0xFF7F1D1D),
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 14),
+          OutlinedButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh, size: 18),
+            label: const Text('Retry'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.appBlue,
+              side: const BorderSide(color: AppColors.appBlue),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileMetaRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _ProfileMetaRow({
+    Key? key,
+    required this.icon,
+    required this.text,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 15, color: const Color(0xFF64748B)),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: Color(0xFF64748B),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

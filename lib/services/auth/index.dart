@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:inventory_app/data/models/api_response.dart';
+import 'package:inventory_app/data/models/user.dart';
 import 'package:inventory_app/helpers/api/index.dart';
 import 'package:inventory_app/helpers/prefs/shared_preferences.dart';
 
@@ -42,6 +43,29 @@ abstract class AuthUtils {
       await saveSession(token);
     } on DioException catch (error) {
       throw AuthException(ApiUtils.readDioError(error));
+    }
+  }
+
+  static Future<User> getMe() async {
+    try {
+      final response = await ApiClient.get<Map<String, dynamic>>('me');
+      final apiResponse = ApiResponse.fromJson(response.data);
+
+      if (apiResponse == null || !apiResponse.success) {
+        throw Exception(
+          apiResponse?.message.isEmpty ?? true
+              ? 'Unable to load profile.'
+              : apiResponse!.message,
+        );
+      }
+
+      if (apiResponse.data is! Map<String, dynamic>) {
+        throw Exception('Unable to load profile.');
+      }
+
+      return User.fromJson(apiResponse.data);
+    } on DioException catch (error) {
+      throw Exception(ApiUtils.readDioError(error));
     }
   }
 
