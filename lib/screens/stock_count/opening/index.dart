@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:inventory_app/data/models/stock_session.dart';
+import 'package:inventory_app/data/models/stock_session_item.dart';
 import 'package:inventory_app/helpers/colors.dart';
+import 'package:inventory_app/services/stock_sessions/index.dart';
 
 class OpeningStockScreen extends StatefulWidget {
   const OpeningStockScreen({Key? key}) : super(key: key);
@@ -10,21 +13,69 @@ class OpeningStockScreen extends StatefulWidget {
 }
 
 class _OpeningStockScreenState extends State<OpeningStockScreen> {
-  late final List<_CountItem> _items;
+  String? _sessionId;
+  StockSession? _session;
+  List<_CountItem> _items = const [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
-  void initState() {
-    super.initState();
-    _items = [
-      _CountItem(
-        name: 'Tusker Lager 500ml',
-        sku: 'DRK-001',
-        quantity: 24,
-        saved: true,
-      ),
-      _CountItem(name: 'Coca-Cola 500ml', sku: 'SFT-008', quantity: 18),
-      _CountItem(name: 'Chicken Breast', sku: 'KTN-014', quantity: 6),
-    ];
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_sessionId != null) return;
+
+    final arguments = ModalRoute.of(context)?.settings.arguments;
+    if (arguments is Map<String, dynamic>) {
+      _sessionId = arguments['sessionId'] as String?;
+    }
+
+    _loadOpeningStock();
+  }
+
+  Future<void> _loadOpeningStock() async {
+    final sessionId = _sessionId;
+    if (sessionId == null || sessionId.isEmpty) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Unable to identify stock session.';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    StockSession? session;
+    List<_CountItem> items = const [];
+    String? errorMessage;
+
+    try {
+      final results = await Future.wait([
+        StockSessionService.getSession(sessionId),
+        StockSessionService.getSessionItems(sessionId),
+      ]);
+      session = results[0] as StockSession;
+      items = (results[1] as List<StockSessionItem>)
+          .map(_CountItem.fromSessionItem)
+          .toList();
+    } catch (error) {
+      errorMessage = _readErrorMessage(error);
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _session = session;
+      _items = items;
+      _errorMessage = errorMessage;
+      _isLoading = false;
+    });
+  }
+
+  String _readErrorMessage(Object error) {
+    final message = error.toString().replaceFirst('Exception: ', '').trim();
+    return message.isEmpty ? 'Unable to load opening stock.' : message;
   }
 
   @override
@@ -45,22 +96,42 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
                   children: [
-                    const _SessionSummaryCard(isOpening: true),
-                    const SizedBox(height: 16),
-                    const _InfoNotice(),
-                    const SizedBox(height: 16),
-                    const _SearchField(),
-                    const SizedBox(height: 14),
-                    for (int index = 0; index < _items.length; index++) ...[
-                      _CountItemCard(
-                        item: _items[index],
-                        isOpening: true,
-                        onDecrease: () => _changeQuantity(index, -1),
-                        onIncrease: () => _changeQuantity(index, 1),
-                        onSave: () => _saveItem(index),
-                        onReasonSelected: (_) {},
+                    if (_isLoading)
+                      const _LoadingState()
+                    else if (_errorMessage != null)
+                      _ErrorState(
+                        message: _errorMessage!,
+                        onRetry: _loadOpeningStock,
+                      )
+                    else if (_session == null)
+                      const _EmptyState(message: 'Stock session not found.')
+                    else ...[
+                      _SessionSummaryCard(
+                        session: _session!,
+                        savedCount: _items.where((item) => item.saved).length,
+                        itemCount: _items.length,
                       ),
+                      const SizedBox(height: 16),
+                      const _InfoNotice(),
+                      const SizedBox(height: 16),
+                      const _SearchField(),
                       const SizedBox(height: 14),
+                      if (_items.isEmpty)
+                        const _EmptyState(
+                          message: 'No items found for this stock session.',
+                        )
+                      else
+                        for (int index = 0; index < _items.length; index++) ...[
+                          _CountItemCard(
+                            item: _items[index],
+                            isOpening: true,
+                            onDecrease: () => _changeQuantity(index, -1),
+                            onIncrease: () => _changeQuantity(index, 1),
+                            onSave: () => _saveItem(index),
+                            onReasonSelected: (_) {},
+                          ),
+                          const SizedBox(height: 14),
+                        ],
                     ],
                   ],
                 ),
@@ -70,7 +141,7 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
         ),
         bottomNavigationBar: _CountBottomBar(
           isOpening: true,
-          savedCount: 12,
+          savedCount: _items.where((item) => item.saved).length,
           onPrimaryPressed: _submitOpeningStock,
         ),
       ),
@@ -78,13 +149,16 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
   }
 
   void _submitOpeningStock() {
+    final session = _session;
+    if (session == null) return;
+
     Navigator.of(context).pushNamed(
       '/submission-success',
-      arguments: const {
+      arguments: {
         'countType': 'Opening stock',
         'title': 'Opening stock submitted',
-        'store': 'Main Store',
-        'items': 30,
+        'store': session.store,
+        'items': _items.length,
         'variances': 0,
       },
     );
@@ -98,10 +172,32 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
     });
   }
 
-  void _saveItem(int index) {
-    setState(() {
-      _items[index].saved = true;
-    });
+  Future<void> _saveItem(int index) async {
+    final sessionId = _sessionId;
+    if (sessionId == null || sessionId.isEmpty) return;
+
+    try {
+      await StockSessionService.submitOpeningQty(
+        sessionId: sessionId,
+        lineId: _items[index].lineId,
+        openingQty: _items[index].quantity.toDouble(),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _items[index].saved = true;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(_readErrorMessage(error)),
+            backgroundColor: const Color(0xFFE11D48),
+          ),
+        );
+    }
   }
 }
 
@@ -239,15 +335,23 @@ class _OptionTile extends StatelessWidget {
 }
 
 class _SessionSummaryCard extends StatelessWidget {
-  final bool isOpening;
+  final StockSession session;
+  final int savedCount;
+  final int itemCount;
 
-  const _SessionSummaryCard({Key? key, required this.isOpening})
-      : super(key: key);
+  const _SessionSummaryCard({
+    Key? key,
+    required this.session,
+    required this.savedCount,
+    required this.itemCount,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final int saved = isOpening ? 12 : 21;
-    final double progress = isOpening ? 0.4 : 0.7;
+    final int totalItems =
+        session.totalItems > 0 ? session.totalItems : itemCount;
+    final double progress =
+        totalItems <= 0 ? 0 : (savedCount / totalItems).clamp(0, 1);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -267,7 +371,7 @@ class _SessionSummaryCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isOpening ? 'Morning Count' : 'Evening Count',
+                      session.title,
                       style: const TextStyle(
                         color: AppColors.darkText,
                         fontSize: 22,
@@ -277,17 +381,12 @@ class _SessionSummaryCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     _MetaLine(
                       icon: Icons.location_on_outlined,
-                      text: isOpening ? 'Main Store' : 'Bar Store',
+                      text: session.store,
                     ),
                     const SizedBox(height: 6),
                     _MetaLine(
-                      icon: isOpening
-                          ? Icons.calendar_today_outlined
-                          : Icons.lock_outline,
-                      text: isOpening ? 'Today, Jun 4' : 'Opening locked',
-                      color: isOpening
-                          ? AppColors.mutedText
-                          : const Color(0xFF079455),
+                      icon: Icons.calendar_today_outlined,
+                      text: session.dateText,
                     ),
                   ],
                 ),
@@ -302,14 +401,13 @@ class _SessionSummaryCard extends StatelessWidget {
                 TextSpan(
                   children: [
                     TextSpan(
-                      text: '$saved',
+                      text: '$savedCount',
                       style: const TextStyle(
                         color: AppColors.appBlue,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    TextSpan(
-                        text: isOpening ? ' of 30 counted' : ' of 30 saved'),
+                    TextSpan(text: ' of $totalItems counted'),
                   ],
                 ),
                 style: const TextStyle(
@@ -364,6 +462,110 @@ class _OpenBadge extends StatelessWidget {
           fontSize: 13,
           fontWeight: FontWeight.w800,
         ),
+      ),
+    );
+  }
+}
+
+class _LoadingState extends StatelessWidget {
+  const _LoadingState({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 36),
+      child: Center(
+        child: CircularProgressIndicator(color: AppColors.appBlue),
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _ErrorState({
+    Key? key,
+    required this.message,
+    required this.onRetry,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFD8DEE8)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.error_outline, color: Color(0xFFE11D48), size: 28),
+          const SizedBox(height: 10),
+          Text(
+            message,
+            style: const TextStyle(
+              color: AppColors.darkText,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 40,
+            child: OutlinedButton(
+              onPressed: onRetry,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.appBlue,
+                side: const BorderSide(color: AppColors.appBlue, width: 1.2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(7),
+                ),
+              ),
+              child: const Text(
+                'Retry',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  final String message;
+
+  const _EmptyState({Key? key, required this.message}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFD8DEE8)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.inventory_2_outlined, color: AppColors.mutedText),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: AppColors.mutedText,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -945,26 +1147,24 @@ class _CountBottomBar extends StatelessWidget {
 class _MetaLine extends StatelessWidget {
   final IconData icon;
   final String text;
-  final Color color;
 
   const _MetaLine({
     Key? key,
     required this.icon,
     required this.text,
-    this.color = AppColors.mutedText,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: color, size: 19),
+        Icon(icon, color: AppColors.mutedText, size: 19),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(
-              color: color,
+            style: const TextStyle(
+              color: AppColors.mutedText,
               fontSize: 15,
               fontWeight: FontWeight.w600,
             ),
@@ -976,6 +1176,7 @@ class _MetaLine extends StatelessWidget {
 }
 
 class _CountItem {
+  final String lineId;
   final String name;
   final String sku;
   int quantity;
@@ -986,6 +1187,7 @@ class _CountItem {
   String? reason;
 
   _CountItem({
+    required this.lineId,
     required this.name,
     required this.sku,
     required this.quantity,
@@ -996,8 +1198,19 @@ class _CountItem {
     this.reason,
   });
 
+  factory _CountItem.fromSessionItem(StockSessionItem item) {
+    return _CountItem(
+      lineId: item.id,
+      name: item.name,
+      sku: item.sku,
+      quantity: item.openingQty.round(),
+      saved: item.openingQty > 0,
+    );
+  }
+
   _CountItem copy() {
     return _CountItem(
+      lineId: lineId,
       name: name,
       sku: sku,
       quantity: quantity,

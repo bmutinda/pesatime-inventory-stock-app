@@ -162,6 +162,24 @@ abstract class ApiUtils {
     return defaultValue;
   }
 
+  static double readDouble(
+    dynamic data,
+    List<String> keys, {
+    double defaultValue = 0,
+  }) {
+    if (data is! Map<String, dynamic>) return defaultValue;
+
+    for (final key in keys) {
+      final value = data[key];
+      if (value is num) return value.toDouble();
+      if (value is String) {
+        return double.tryParse(value) ?? defaultValue;
+      }
+    }
+
+    return defaultValue;
+  }
+
   static bool readBool(
     dynamic data,
     String key, {

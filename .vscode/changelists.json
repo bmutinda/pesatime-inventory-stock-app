@@ -4,10 +4,10 @@
       "name": "Default",
       "files": [
         ".vscode/changelists.json",
-        "lib/screens/stock_count/index.dart",
-        "lib/screens/stock_count/closing/index.dart",
+        "lib/helpers/api/index.dart",
         "lib/screens/stock_count/opening/index.dart",
-        "lib/main.dart"
+        "lib/services/stock_sessions/index.dart",
+        "lib/data/models/stock_session_item.dart"
       ]
     }
   ],
