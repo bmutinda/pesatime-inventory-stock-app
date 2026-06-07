@@ -4,12 +4,11 @@
       "name": "Default",
       "files": [
         ".vscode/changelists.json",
-        "lib/data/models/api_response.dart",
-        "lib/helpers/api/index.dart",
         "lib/screens/home/index.dart",
-        "lib/data/models/stock_session.dart",
         "lib/services/stock_sessions/index.dart",
-        "lib/helpers/utils/date.dart"
+        "lib/screens/home/history.dart",
+        "lib/screens/home/home.dart",
+        "lib/screens/home/profile.dart"
       ]
     }
   ],
