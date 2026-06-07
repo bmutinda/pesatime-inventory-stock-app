@@ -1,5 +1,5 @@
 class ApiResponse {
-  final Map<String, dynamic>? data;
+  final dynamic data;
   final bool success;
   final String message;
 
@@ -13,7 +13,7 @@ class ApiResponse {
     if (json == null) return null;
 
     return ApiResponse(
-      data: json["data"] is Map<String, dynamic> ? json["data"] : null,
+      data: json["data"],
       success: _readSuccess(json["status"]),
       message: json["message"] ?? "",
     );

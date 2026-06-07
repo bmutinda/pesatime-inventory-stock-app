@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:inventory_app/data/models/stock_session.dart';
 import 'package:inventory_app/helpers/colors.dart';
 import 'package:inventory_app/services/auth/index.dart';
+import 'package:inventory_app/services/stock_sessions/index.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -12,67 +14,44 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  bool _isLoadingSessions = true;
+  String? _sessionsError;
+  List<StockSession> _sessions = const [];
+  final List<_HistorySession> _history = const [];
 
-  final List<_StockSession> _sessions = const [
-    _StockSession(
-      title: 'Morning Count',
-      store: 'Main Store',
-      type: 'Opening stock',
-      status: 'In progress',
-      action: 'Continue',
-      routeName: '/opening-stock',
-      itemsSaved: 12,
-      totalItems: 30,
-      progress: 0.4,
-      statusColor: AppColors.appBlue,
-    ),
-    _StockSession(
-      title: 'Evening Count',
-      store: 'Bar Store',
-      type: 'Closing stock',
-      status: 'Ready',
-      action: 'Start',
-      routeName: '/closing-stock',
-      itemsSaved: 0,
-      totalItems: 30,
-      progress: 0,
-      statusColor: AppColors.success,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadActiveSessions();
+  }
 
-  final List<_HistorySession> _history = const [
-    _HistorySession(
-      title: 'Evening Count',
-      store: 'Bar Store',
-      status: 'SUBMITTED',
-      timestamp: 'Submitted today, 8:14 PM',
-      items: 30,
-      variances: 4,
-      action: 'View',
-      statusColor: AppColors.appBlue,
-    ),
-    _HistorySession(
-      title: 'Morning Count',
-      store: 'Main Store',
-      status: 'APPROVED',
-      timestamp: 'Approved Jun 4, 10:02 AM',
-      items: 30,
-      variances: 0,
-      action: 'View',
-      statusColor: AppColors.success,
-    ),
-    _HistorySession(
-      title: 'Weekend Count',
-      store: 'Kitchen',
-      status: 'REJECTED',
-      timestamp: 'Rejected Jun 3, 3:47 PM',
-      items: 30,
-      variances: 2,
-      action: 'Review',
-      reason: 'Recount damaged items',
-      statusColor: Color(0xFFE11D48),
-    ),
-  ];
+  Future<void> _loadActiveSessions() async {
+    setState(() {
+      _isLoadingSessions = true;
+      _sessionsError = null;
+    });
+
+    List<StockSession> sessions = const [];
+    String? errorMessage;
+
+    try {
+      sessions = await StockSessionService.getActiveSessions();
+    } catch (error) {
+      errorMessage = _readErrorMessage(error);
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _sessions = sessions;
+      _sessionsError = errorMessage;
+      _isLoadingSessions = false;
+    });
+  }
+
+  String _readErrorMessage(Object error) {
+    final message = error.toString().replaceFirst('Exception: ', '').trim();
+    return message.isEmpty ? 'Unable to load active sessions.' : message;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +102,12 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_selectedIndex == 2) {
       return const _ProfileTab();
     }
-    return _HomeTab(sessions: _sessions);
+    return _HomeTab(
+      sessions: _sessions,
+      isLoading: _isLoadingSessions,
+      errorMessage: _sessionsError,
+      onRetry: _loadActiveSessions,
+    );
   }
 }
 
@@ -164,13 +148,10 @@ class _HomeHeader extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(color: const Color(0xFF9FC3FF)),
             ),
-            child: const Text(
-              'BM',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-              ),
+            child: const Icon(
+              Icons.person,
+              color: Colors.white,
+              size: 24,
             ),
           ),
         ],
@@ -180,9 +161,18 @@ class _HomeHeader extends StatelessWidget {
 }
 
 class _HomeTab extends StatelessWidget {
-  final List<_StockSession> sessions;
+  final List<StockSession> sessions;
+  final bool isLoading;
+  final String? errorMessage;
+  final VoidCallback onRetry;
 
-  const _HomeTab({Key? key, required this.sessions}) : super(key: key);
+  const _HomeTab({
+    Key? key,
+    required this.sessions,
+    required this.isLoading,
+    required this.errorMessage,
+    required this.onRetry,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -207,10 +197,10 @@ class _HomeTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
-        const Row(
+        Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
+            const Text(
               'Assigned sessions',
               style: TextStyle(
                 color: AppColors.darkText,
@@ -219,8 +209,8 @@ class _HomeTab extends StatelessWidget {
               ),
             ),
             Text(
-              '2 active',
-              style: TextStyle(
+              '${sessions.length} active',
+              style: const TextStyle(
                 color: AppColors.appBlue,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -229,18 +219,24 @@ class _HomeTab extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        for (final session in sessions) ...[
-          _SessionCard(session: session),
-          const SizedBox(height: 18),
-        ],
-        const _RecentActivityCard(),
+        if (isLoading)
+          const _SessionsLoadingState()
+        else if (errorMessage != null)
+          _SessionsErrorState(message: errorMessage!, onRetry: onRetry)
+        else if (sessions.isEmpty)
+          const _SessionsEmptyState()
+        else
+          for (final session in sessions) ...[
+            _SessionCard(session: session),
+            const SizedBox(height: 18),
+          ],
       ],
     );
   }
 }
 
 class _SessionCard extends StatelessWidget {
-  final _StockSession session;
+  final StockSession session;
 
   const _SessionCard({Key? key, required this.session}) : super(key: key);
 
@@ -286,9 +282,9 @@ class _SessionCard extends StatelessWidget {
                       text: session.store,
                     ),
                     const SizedBox(height: 6),
-                    const _IconText(
+                    _IconText(
                       icon: Icons.calendar_today_outlined,
-                      text: 'Today, Jun 4',
+                      text: session.dateText,
                     ),
                   ],
                 ),
@@ -355,6 +351,11 @@ class _SessionCard extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: () => Navigator.of(context).pushNamed(
                     session.routeName,
+                    arguments: {
+                      'sessionId': session.id,
+                      'sessionName': session.title,
+                      'locationName': session.store,
+                    },
                   ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.appBlue,
@@ -379,6 +380,114 @@ class _SessionCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SessionsLoadingState extends StatelessWidget {
+  const _SessionsLoadingState({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 28),
+      child: Center(
+        child: CircularProgressIndicator(
+          color: AppColors.appBlue,
+        ),
+      ),
+    );
+  }
+}
+
+class _SessionsErrorState extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _SessionsErrorState({
+    Key? key,
+    required this.message,
+    required this.onRetry,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFD8DEE8)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.error_outline,
+            color: Color(0xFFE11D48),
+            size: 28,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            message,
+            style: const TextStyle(
+              color: AppColors.darkText,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 40,
+            child: OutlinedButton(
+              onPressed: onRetry,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.appBlue,
+                side: const BorderSide(color: AppColors.appBlue, width: 1.2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(7),
+                ),
+              ),
+              child: const Text(
+                'Retry',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SessionsEmptyState extends StatelessWidget {
+  const _SessionsEmptyState({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFD8DEE8)),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.inventory_2_outlined, color: AppColors.mutedText),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'No active stock sessions assigned.',
+              style: TextStyle(
+                color: AppColors.mutedText,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ],
       ),
@@ -476,38 +585,6 @@ class _MiniChip extends StatelessWidget {
   }
 }
 
-class _RecentActivityCard extends StatelessWidget {
-  const _RecentActivityCard({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFD8DEE8)),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.check_circle, color: AppColors.success, size: 26),
-          SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Last saved: Opening stock, 8:14 PM',
-              style: TextStyle(
-                color: AppColors.mutedText,
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _HistoryTab extends StatelessWidget {
   final List<_HistorySession> history;
 
@@ -536,17 +613,53 @@ class _HistoryTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 18),
-        const _SearchBox(hintText: 'Search history'),
-        const SizedBox(height: 16),
-        const _HistoryFilterRow(),
-        const SizedBox(height: 16),
-        const _MonthSelector(),
-        const SizedBox(height: 16),
-        for (final item in history) ...[
-          _HistoryCard(item: item),
-          const SizedBox(height: 14),
+        if (history.isEmpty)
+          const _HistoryEmptyState()
+        else ...[
+          const _SearchBox(hintText: 'Search history'),
+          const SizedBox(height: 16),
+          const _HistoryFilterRow(),
+          const SizedBox(height: 16),
+          const _MonthSelector(),
+          const SizedBox(height: 16),
+          for (final item in history) ...[
+            _HistoryCard(item: item),
+            const SizedBox(height: 14),
+          ],
         ],
       ],
+    );
+  }
+}
+
+class _HistoryEmptyState extends StatelessWidget {
+  const _HistoryEmptyState({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFD8DEE8)),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.history, color: AppColors.mutedText),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'No stock session history yet.',
+              style: TextStyle(
+                color: AppColors.mutedText,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -754,7 +867,6 @@ class _HistoryCard extends StatelessWidget {
                       'timestamp': item.timestamp,
                       'items': item.items,
                       'variances': item.variances,
-                      'reason': item.reason,
                       'statusColor': item.statusColor,
                     },
                   ),
@@ -785,17 +897,6 @@ class _HistoryCard extends StatelessWidget {
               ),
             ],
           ),
-          if (item.reason != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              'Reason: ${item.reason}',
-              style: const TextStyle(
-                color: Color(0xFFE11D48),
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -840,13 +941,10 @@ class _ProfileHeaderCard extends StatelessWidget {
               color: AppColors.appBlue,
               shape: BoxShape.circle,
             ),
-            child: const Text(
-              'BM',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-              ),
+            child: const Icon(
+              Icons.person,
+              color: Colors.white,
+              size: 30,
             ),
           ),
           const SizedBox(width: 14),
@@ -855,7 +953,7 @@ class _ProfileHeaderCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Boniface Mutinda',
+                  'Signed in',
                   style: TextStyle(
                     color: AppColors.darkText,
                     fontSize: 21,
@@ -1038,32 +1136,6 @@ class _BottomNavItem extends StatelessWidget {
   }
 }
 
-class _StockSession {
-  final String title;
-  final String store;
-  final String type;
-  final String status;
-  final String action;
-  final String routeName;
-  final int itemsSaved;
-  final int totalItems;
-  final double progress;
-  final Color statusColor;
-
-  const _StockSession({
-    required this.title,
-    required this.store,
-    required this.type,
-    required this.status,
-    required this.action,
-    required this.routeName,
-    required this.itemsSaved,
-    required this.totalItems,
-    required this.progress,
-    required this.statusColor,
-  });
-}
-
 class _HistorySession {
   final String title;
   final String store;
@@ -1072,7 +1144,6 @@ class _HistorySession {
   final int items;
   final int variances;
   final String action;
-  final String? reason;
   final Color statusColor;
 
   const _HistorySession({
@@ -1083,7 +1154,6 @@ class _HistorySession {
     required this.items,
     required this.variances,
     required this.action,
-    this.reason,
     required this.statusColor,
   });
 }

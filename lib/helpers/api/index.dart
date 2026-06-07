@@ -127,16 +127,53 @@ abstract class ApiUtils {
     return 'Unable to process request. Please try again.';
   }
 
-  static String readString(Map<String, dynamic>? data, List<String> keys) {
-    if (data == null) return '';
+  static String readString(
+    dynamic data,
+    List<String> keys, {
+    String defaultValue = '',
+  }) {
+    if (data is! Map<String, dynamic>) return defaultValue;
 
     for (final key in keys) {
       final value = data[key];
       if (value is String && value.isNotEmpty) {
         return value;
       }
+      if (value is num || value is bool) {
+        return value.toString();
+      }
     }
 
-    return '';
+    return defaultValue;
+  }
+
+  static int readInt(dynamic data, List<String> keys, {int defaultValue = 0}) {
+    if (data is! Map<String, dynamic>) return defaultValue;
+
+    for (final key in keys) {
+      final value = data[key];
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      if (value is String) {
+        return int.tryParse(value) ?? defaultValue;
+      }
+    }
+
+    return defaultValue;
+  }
+
+  static bool readBool(
+    dynamic data,
+    String key, {
+    bool defaultValue = false,
+  }) {
+    if (data is! Map<String, dynamic>) return defaultValue;
+
+    final value = data[key];
+    if (value is bool) return value;
+    if (value is num) return value == 1;
+    if (value is String) return value == '1' || value.toLowerCase() == 'true';
+
+    return defaultValue;
   }
 }
