@@ -5,7 +5,8 @@ import 'package:inventory_app/screens/history_detail/index.dart';
 import 'package:inventory_app/screens/home/index.dart';
 import 'package:inventory_app/screens/login/index.dart';
 import 'package:inventory_app/screens/splash/index.dart';
-import 'package:inventory_app/screens/stock_count/index.dart';
+import 'package:inventory_app/screens/stock_count/closing/index.dart';
+import 'package:inventory_app/screens/stock_count/opening/index.dart';
 import 'package:inventory_app/screens/submission_success/index.dart';
 import 'package:flutter/material.dart' hide Router;
 
