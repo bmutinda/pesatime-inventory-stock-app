@@ -5,6 +5,8 @@ class _HomeTab extends StatelessWidget {
   final bool isLoading;
   final String? errorMessage;
   final VoidCallback onRetry;
+  final Future<void> Function() onRefresh;
+  final Future<void> Function(StockSession session) onSessionSelected;
 
   const _HomeTab({
     Key? key,
@@ -12,73 +14,88 @@ class _HomeTab extends StatelessWidget {
     required this.isLoading,
     required this.errorMessage,
     required this.onRetry,
+    required this.onRefresh,
+    required this.onSessionSelected,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
-      children: [
-        const Text(
-          'Stock taking',
-          style: TextStyle(
-            color: AppColors.darkText,
-            fontSize: 28,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'View assigned counts and submit stock quantities.',
-          style: TextStyle(
-            color: AppColors.mutedText,
-            fontSize: 17,
-            height: 1.35,
-          ),
-        ),
-        const SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Assigned sessions',
-              style: TextStyle(
-                color: AppColors.darkText,
-                fontSize: 21,
-                fontWeight: FontWeight.w800,
-              ),
+    return RefreshIndicator(
+      color: AppColors.appBlue,
+      onRefresh: onRefresh,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
+        children: [
+          const Text(
+            'Stock taking',
+            style: TextStyle(
+              color: AppColors.darkText,
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
             ),
-            Text(
-              '${sessions.length} active',
-              style: const TextStyle(
-                color: AppColors.appBlue,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'View assigned counts and submit stock quantities.',
+            style: TextStyle(
+              color: AppColors.mutedText,
+              fontSize: 17,
+              height: 1.35,
             ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        if (isLoading)
-          const _SessionsLoadingState()
-        else if (errorMessage != null)
-          _SessionsErrorState(message: errorMessage!, onRetry: onRetry)
-        else if (sessions.isEmpty)
-          const _SessionsEmptyState()
-        else
-          for (final session in sessions) ...[
-            _SessionCard(session: session),
-            const SizedBox(height: 18),
-          ],
-      ],
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Assigned sessions',
+                style: TextStyle(
+                  color: AppColors.darkText,
+                  fontSize: 21,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              Text(
+                '${sessions.length} active',
+                style: const TextStyle(
+                  color: AppColors.appBlue,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (isLoading)
+            const _SessionsLoadingState()
+          else if (errorMessage != null)
+            _SessionsErrorState(message: errorMessage!, onRetry: onRetry)
+          else if (sessions.isEmpty)
+            const _SessionsEmptyState()
+          else
+            for (final session in sessions) ...[
+              _SessionCard(
+                session: session,
+                onSelected: () => onSessionSelected(session),
+              ),
+              const SizedBox(height: 18),
+            ],
+        ],
+      ),
     );
   }
 }
 
 class _SessionCard extends StatelessWidget {
   final StockSession session;
+  final VoidCallback onSelected;
 
-  const _SessionCard({Key? key, required this.session}) : super(key: key);
+  const _SessionCard({
+    Key? key,
+    required this.session,
+    required this.onSelected,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -189,14 +206,7 @@ class _SessionCard extends StatelessWidget {
               SizedBox(
                 height: 38,
                 child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pushNamed(
-                    session.routeName,
-                    arguments: {
-                      'sessionId': session.id,
-                      'sessionName': session.title,
-                      'locationName': session.store,
-                    },
-                  ),
+                  onPressed: onSelected,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.appBlue,
                     minimumSize: const Size(0, 38),

@@ -94,6 +94,27 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> _refreshHomeData() async {
+    await Future.wait([
+      _loadActiveSessions(),
+      _loadHistorySessions(),
+    ]);
+  }
+
+  Future<void> _openSession(StockSession session) async {
+    await Navigator.of(context).pushNamed(
+      session.routeName,
+      arguments: {
+        'sessionId': session.id,
+        'sessionName': session.title,
+        'locationName': session.store,
+      },
+    );
+
+    if (!mounted) return;
+    await _refreshHomeData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -143,6 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
         isLoading: _isLoadingHistory,
         errorMessage: _historyError,
         onRetry: _loadHistorySessions,
+        onRefresh: _loadHistorySessions,
       );
     }
     if (_selectedIndex == 2) {
@@ -153,6 +175,8 @@ class _HomeScreenState extends State<HomeScreen> {
       isLoading: _isLoadingSessions,
       errorMessage: _sessionsError,
       onRetry: _loadActiveSessions,
+      onRefresh: _loadActiveSessions,
+      onSessionSelected: _openSession,
     );
   }
 }

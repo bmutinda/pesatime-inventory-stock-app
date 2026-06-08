@@ -5,6 +5,7 @@ class _HistoryTab extends StatelessWidget {
   final bool isLoading;
   final String? errorMessage;
   final VoidCallback onRetry;
+  final Future<void> Function() onRefresh;
 
   const _HistoryTab({
     Key? key,
@@ -12,44 +13,50 @@ class _HistoryTab extends StatelessWidget {
     required this.isLoading,
     required this.errorMessage,
     required this.onRetry,
+    required this.onRefresh,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
-      children: [
-        const Text(
-          'Stock session history',
-          style: TextStyle(
-            color: AppColors.darkText,
-            fontSize: 26,
-            fontWeight: FontWeight.w800,
+    return RefreshIndicator(
+      color: AppColors.appBlue,
+      onRefresh: onRefresh,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
+        children: [
+          const Text(
+            'Stock session history',
+            style: TextStyle(
+              color: AppColors.darkText,
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+            ),
           ),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'Track submitted and completed counts.',
-          style: TextStyle(
-            color: AppColors.mutedText,
-            fontSize: 16,
-            height: 1.35,
+          const SizedBox(height: 6),
+          const Text(
+            'Track submitted and completed counts.',
+            style: TextStyle(
+              color: AppColors.mutedText,
+              fontSize: 16,
+              height: 1.35,
+            ),
           ),
-        ),
-        const SizedBox(height: 18),
-        if (isLoading)
-          const _SessionsLoadingState()
-        else if (errorMessage != null)
-          _SessionsErrorState(message: errorMessage!, onRetry: onRetry)
-        else if (history.isEmpty)
-          const _HistoryEmptyState()
-        else ...[
-          for (final item in history) ...[
-            _HistoryCard(item: item),
-            const SizedBox(height: 14),
+          const SizedBox(height: 18),
+          if (isLoading)
+            const _SessionsLoadingState()
+          else if (errorMessage != null)
+            _SessionsErrorState(message: errorMessage!, onRetry: onRetry)
+          else if (history.isEmpty)
+            const _HistoryEmptyState()
+          else ...[
+            for (final item in history) ...[
+              _HistoryCard(item: item),
+              const SizedBox(height: 14),
+            ],
           ],
         ],
-      ],
+      ),
     );
   }
 }
