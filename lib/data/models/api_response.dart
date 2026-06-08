@@ -14,18 +14,8 @@ class ApiResponse {
 
     return ApiResponse(
       data: json["data"],
-      success: _readSuccess(json["status"]),
+      success: json["status"] == 1,
       message: json["message"] ?? "",
     );
-  }
-
-  static bool _readSuccess(dynamic status) {
-    if (status is bool) return status;
-    if (status is num) return status == 1;
-    if (status is String) {
-      return status == '1' || status.toLowerCase() == 'true';
-    }
-
-    return false;
   }
 }

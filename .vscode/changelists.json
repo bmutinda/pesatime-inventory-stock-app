@@ -3,11 +3,12 @@
     {
       "name": "Default",
       "files": [
-        "lib/data/models/user.dart",
-        "lib/screens/home/index.dart",
-        "lib/services/auth/index.dart",
         ".vscode/changelists.json",
-        "lib/screens/home/profile.dart"
+        "lib/screens/stock_count/closing/index.dart",
+        "lib/screens/stock_count/opening/index.dart",
+        ".vscode/numbered-bookmarks.json",
+        "lib/data/models/api_response.dart",
+        "lib/helpers/api/index.dart"
       ]
     }
   ],

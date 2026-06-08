@@ -34,8 +34,10 @@ abstract class ApiClient {
           options.queryParameters['device_id'] = deviceId;
 
           final data = options.data;
-          if (data is Map<String, dynamic>) {
-            data.putIfAbsent('device_id', () => deviceId);
+          if (data is Map) {
+            final requestData = Map<String, dynamic>.from(data);
+            requestData.putIfAbsent('device_id', () => deviceId);
+            options.data = requestData;
           }
 
           return handler.next(options);

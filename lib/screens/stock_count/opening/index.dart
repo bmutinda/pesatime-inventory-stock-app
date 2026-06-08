@@ -114,8 +114,6 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
                       const SizedBox(height: 16),
                       const _InfoNotice(),
                       const SizedBox(height: 16),
-                      const _SearchField(),
-                      const SizedBox(height: 14),
                       if (_items.isEmpty)
                         const _EmptyState(
                           message: 'No items found for this stock session.',
@@ -124,11 +122,9 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
                         for (int index = 0; index < _items.length; index++) ...[
                           _CountItemCard(
                             item: _items[index],
-                            isOpening: true,
                             onDecrease: () => _changeQuantity(index, -1),
                             onIncrease: () => _changeQuantity(index, 1),
                             onSave: () => _saveItem(index),
-                            onReasonSelected: (_) {},
                           ),
                           const SizedBox(height: 14),
                         ],
@@ -140,8 +136,8 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
           ),
         ),
         bottomNavigationBar: _CountBottomBar(
-          isOpening: true,
           savedCount: _items.where((item) => item.saved).length,
+          itemCount: _items.length,
           onPrimaryPressed: _submitOpeningStock,
         ),
       ),
@@ -233,102 +229,8 @@ class _StockCountHeader extends StatelessWidget {
               ),
             ),
           ),
-          IconButton(
-            onPressed: () => _showSessionOptions(context),
-            icon: const Icon(Icons.more_vert, color: AppColors.darkText),
-          ),
+          const SizedBox(width: 48),
         ],
-      ),
-    );
-  }
-
-  void _showSessionOptions(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Session options',
-                  style: TextStyle(
-                    color: AppColors.darkText,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _OptionTile(
-                  icon: Icons.info_outline,
-                  title: 'Session details',
-                  subtitle: 'Today, Jun 4',
-                  onTap: () => Navigator.of(context).pop(),
-                ),
-                _OptionTile(
-                  icon: Icons.close,
-                  title: 'Close options',
-                  subtitle: 'Return to stock count',
-                  onTap: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _OptionTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _OptionTile({
-    Key? key,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      onTap: onTap,
-      contentPadding: EdgeInsets.zero,
-      leading: Container(
-        width: 42,
-        height: 42,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: const Color(0xFFEAF3FF),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(icon, color: AppColors.appBlue),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          color: AppColors.darkText,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: const TextStyle(
-          color: AppColors.mutedText,
-          fontWeight: FontWeight.w600,
-        ),
       ),
     );
   }
@@ -595,54 +497,18 @@ class _InfoNotice extends StatelessWidget {
   }
 }
 
-class _SearchField extends StatelessWidget {
-  const _SearchField({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      decoration: InputDecoration(
-        hintText: 'Search items',
-        hintStyle: const TextStyle(
-          color: AppColors.inputIcon,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
-        prefixIcon:
-            const Icon(Icons.search, color: AppColors.mutedText, size: 24),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFFD0D7E2)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.appBlue, width: 1.4),
-        ),
-      ),
-    );
-  }
-}
-
 class _CountItemCard extends StatelessWidget {
   final _CountItem item;
-  final bool isOpening;
   final VoidCallback onDecrease;
   final VoidCallback onIncrease;
   final VoidCallback onSave;
-  final ValueChanged<String> onReasonSelected;
 
   const _CountItemCard({
     Key? key,
     required this.item,
-    required this.isOpening,
     required this.onDecrease,
     required this.onIncrease,
     required this.onSave,
-    required this.onReasonSelected,
   }) : super(key: key);
 
   @override
@@ -684,24 +550,12 @@ class _CountItemCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (!isOpening) _VarianceBadge(variance: item.variance),
             ],
           ),
-          if (!isOpening) ...[
-            const SizedBox(height: 12),
-            Text(
-              'Expected  ${item.expected}    |    Opening  ${item.opening}',
-              style: const TextStyle(
-                color: AppColors.mutedText,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
           const SizedBox(height: 14),
-          Text(
-            isOpening ? 'Opening qty' : 'Closing qty',
-            style: const TextStyle(
+          const Text(
+            'Opening qty',
+            style: TextStyle(
               color: AppColors.mutedText,
               fontSize: 15,
               fontWeight: FontWeight.w600,
@@ -722,13 +576,6 @@ class _CountItemCard extends StatelessWidget {
           if (item.saved) ...[
             const SizedBox(height: 14),
             const _SavedLabel(),
-          ],
-          if (!isOpening && item.variance != 0) ...[
-            const SizedBox(height: 14),
-            _ReasonSelector(
-              value: item.reason,
-              onSelected: onReasonSelected,
-            ),
           ],
         ],
       ),
@@ -850,182 +697,15 @@ class _SavedLabel extends StatelessWidget {
   }
 }
 
-class _VarianceBadge extends StatelessWidget {
-  final int variance;
-
-  const _VarianceBadge({Key? key, required this.variance}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final bool positive = variance > 0;
-    final bool neutral = variance == 0;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: neutral
-            ? const Color(0xFFEAF8F0)
-            : positive
-                ? const Color(0xFFFFF3E6)
-                : const Color(0xFFFDECEF),
-        borderRadius: BorderRadius.circular(7),
-      ),
-      child: Text(
-        neutral ? 'No variance' : 'Variance ${positive ? '+' : ''}$variance',
-        style: TextStyle(
-          color: neutral
-              ? const Color(0xFF079455)
-              : positive
-                  ? const Color(0xFFE36C0A)
-                  : const Color(0xFFE11D48),
-          fontSize: 13,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-}
-
-class _ReasonSelector extends StatelessWidget {
-  final String? value;
-  final ValueChanged<String> onSelected;
-
-  const _ReasonSelector({
-    Key? key,
-    this.value,
-    required this.onSelected,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Reason',
-          style: TextStyle(
-            color: AppColors.mutedText,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        InkWell(
-          onTap: () => _showReasonSheet(context),
-          borderRadius: BorderRadius.circular(7),
-          child: Container(
-            height: 44,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(7),
-              border: Border.all(color: const Color(0xFFD0D7E2)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    value ?? 'Add reason',
-                    style: TextStyle(
-                      color: value == null
-                          ? AppColors.inputIcon
-                          : AppColors.darkText,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const Icon(
-                  Icons.keyboard_arrow_down,
-                  color: AppColors.mutedText,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showReasonSheet(BuildContext context) {
-    const List<String> reasons = [
-      'Damaged bottle',
-      'Spillage',
-      'Staff meal',
-      'Supplier return',
-      'Wrong opening count',
-    ];
-
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Variance reason',
-                  style: TextStyle(
-                    color: AppColors.darkText,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Select why the closing count differs.',
-                  style: TextStyle(
-                    color: AppColors.mutedText,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                for (final reason in reasons)
-                  ListTile(
-                    onTap: () {
-                      onSelected(reason);
-                      Navigator.of(context).pop();
-                    },
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      reason,
-                      style: const TextStyle(
-                        color: AppColors.darkText,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    trailing: value == reason
-                        ? const Icon(
-                            Icons.check_circle,
-                            color: AppColors.success,
-                          )
-                        : null,
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
 class _CountBottomBar extends StatelessWidget {
-  final bool isOpening;
   final int savedCount;
+  final int itemCount;
   final VoidCallback onPrimaryPressed;
 
   const _CountBottomBar({
     Key? key,
-    required this.isOpening,
     required this.savedCount,
+    required this.itemCount,
     required this.onPrimaryPressed,
   }) : super(key: key);
 
@@ -1051,19 +731,6 @@ class _CountBottomBar extends StatelessWidget {
           children: [
             Row(
               children: [
-                if (!isOpening) ...[
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppColors.appBlue,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.inventory_2_outlined,
-                        color: Colors.white),
-                  ),
-                  const SizedBox(width: 10),
-                ],
                 Text.rich(
                   TextSpan(
                     children: [
@@ -1074,7 +741,7 @@ class _CountBottomBar extends StatelessWidget {
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const TextSpan(text: '/30 saved'),
+                      TextSpan(text: ' of $itemCount saved'),
                     ],
                   ),
                   style: const TextStyle(
@@ -1084,18 +751,14 @@ class _CountBottomBar extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                Row(
+                const Row(
                   children: [
-                    Icon(
-                      isOpening ? Icons.check_circle : Icons.error_outline,
-                      color:
-                          isOpening ? AppColors.success : AppColors.mutedText,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 6),
+                    Icon(Icons.check_circle,
+                        color: AppColors.success, size: 18),
+                    SizedBox(width: 6),
                     Text(
-                      isOpening ? 'Ready to submit' : 'Reasons required',
-                      style: const TextStyle(
+                      'Ready to submit',
+                      style: TextStyle(
                         color: AppColors.mutedText,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -1119,20 +782,16 @@ class _CountBottomBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      isOpening ? 'Submit opening counts' : 'Review closing',
-                      style: const TextStyle(
+                      'Submit opening counts',
+                      style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    if (!isOpening) ...[
-                      const SizedBox(width: 12),
-                      const Icon(Icons.arrow_forward, size: 20),
-                    ],
                   ],
                 ),
               ),
@@ -1181,10 +840,6 @@ class _CountItem {
   final String sku;
   int quantity;
   bool saved;
-  final int expected;
-  final int opening;
-  int variance;
-  String? reason;
 
   _CountItem({
     required this.lineId,
@@ -1192,10 +847,6 @@ class _CountItem {
     required this.sku,
     required this.quantity,
     this.saved = false,
-    this.expected = 0,
-    this.opening = 0,
-    this.variance = 0,
-    this.reason,
   });
 
   factory _CountItem.fromSessionItem(StockSessionItem item) {
@@ -1215,10 +866,6 @@ class _CountItem {
       sku: sku,
       quantity: quantity,
       saved: saved,
-      expected: expected,
-      opening: opening,
-      variance: variance,
-      reason: reason,
     );
   }
 }

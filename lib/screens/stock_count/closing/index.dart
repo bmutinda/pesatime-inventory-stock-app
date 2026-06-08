@@ -80,6 +80,11 @@ class _ClosingStockScreenState extends State<ClosingStockScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final savedCount = _items.where((item) => item.saved).length;
+    final missingReasons = _items
+        .where((item) => item.variance != 0 && item.reason == null)
+        .length;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Color(0xFF0055C8),
@@ -108,12 +113,10 @@ class _ClosingStockScreenState extends State<ClosingStockScreen> {
                     else ...[
                       _SessionSummaryCard(
                         session: _session!,
-                        savedCount: _items.where((item) => item.saved).length,
+                        savedCount: savedCount,
                         itemCount: _items.length,
                       ),
                       const SizedBox(height: 16),
-                      const _SearchField(),
-                      const SizedBox(height: 14),
                       if (_items.isEmpty)
                         const _EmptyState(
                           message: 'No items found for this stock session.',
@@ -122,7 +125,6 @@ class _ClosingStockScreenState extends State<ClosingStockScreen> {
                         for (int index = 0; index < _items.length; index++) ...[
                           _CountItemCard(
                             item: _items[index],
-                            isOpening: false,
                             onDecrease: () => _changeQuantity(index, -1),
                             onIncrease: () => _changeQuantity(index, 1),
                             onSave: () => _saveItem(index),
@@ -139,8 +141,9 @@ class _ClosingStockScreenState extends State<ClosingStockScreen> {
           ),
         ),
         bottomNavigationBar: _CountBottomBar(
-          isOpening: false,
-          savedCount: _items.where((item) => item.saved).length,
+          savedCount: savedCount,
+          itemCount: _items.length,
+          missingReasons: missingReasons,
           onPrimaryPressed: _openClosingReview,
         ),
       ),
@@ -309,102 +312,8 @@ class _StockCountHeader extends StatelessWidget {
               ),
             ),
           ),
-          IconButton(
-            onPressed: () => _showSessionOptions(context),
-            icon: const Icon(Icons.more_vert, color: AppColors.darkText),
-          ),
+          const SizedBox(width: 48),
         ],
-      ),
-    );
-  }
-
-  void _showSessionOptions(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Session options',
-                  style: TextStyle(
-                    color: AppColors.darkText,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _OptionTile(
-                  icon: Icons.info_outline,
-                  title: 'Session details',
-                  subtitle: 'Today, Jun 4',
-                  onTap: () => Navigator.of(context).pop(),
-                ),
-                _OptionTile(
-                  icon: Icons.close,
-                  title: 'Close options',
-                  subtitle: 'Return to stock count',
-                  onTap: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _OptionTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _OptionTile({
-    Key? key,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      onTap: onTap,
-      contentPadding: EdgeInsets.zero,
-      leading: Container(
-        width: 42,
-        height: 42,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: const Color(0xFFEAF3FF),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(icon, color: AppColors.appBlue),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          color: AppColors.darkText,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: const TextStyle(
-          color: AppColors.mutedText,
-          fontWeight: FontWeight.w600,
-        ),
       ),
     );
   }
@@ -648,41 +557,8 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _SearchField extends StatelessWidget {
-  const _SearchField({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      decoration: InputDecoration(
-        hintText: 'Search items',
-        hintStyle: const TextStyle(
-          color: AppColors.inputIcon,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
-        prefixIcon:
-            const Icon(Icons.search, color: AppColors.mutedText, size: 24),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFFD0D7E2)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.appBlue, width: 1.4),
-        ),
-      ),
-    );
-  }
-}
-
 class _CountItemCard extends StatelessWidget {
   final _CountItem item;
-  final bool isOpening;
   final VoidCallback onDecrease;
   final VoidCallback onIncrease;
   final VoidCallback onSave;
@@ -691,7 +567,6 @@ class _CountItemCard extends StatelessWidget {
   const _CountItemCard({
     Key? key,
     required this.item,
-    required this.isOpening,
     required this.onDecrease,
     required this.onIncrease,
     required this.onSave,
@@ -737,24 +612,22 @@ class _CountItemCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (!isOpening) _VarianceBadge(variance: item.variance),
+              _VarianceBadge(variance: item.variance),
             ],
           ),
-          if (!isOpening) ...[
-            const SizedBox(height: 12),
-            Text(
-              'Expected  ${item.expected}    |    Opening  ${item.opening}',
-              style: const TextStyle(
-                color: AppColors.mutedText,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Text(
-            isOpening ? 'Opening qty' : 'Closing qty',
+            'Expected  ${item.expected}    |    Opening  ${item.opening}',
             style: const TextStyle(
+              color: AppColors.mutedText,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Closing qty',
+            style: TextStyle(
               color: AppColors.mutedText,
               fontSize: 15,
               fontWeight: FontWeight.w600,
@@ -776,7 +649,7 @@ class _CountItemCard extends StatelessWidget {
             const SizedBox(height: 14),
             const _SavedLabel(),
           ],
-          if (!isOpening && item.variance != 0) ...[
+          if (item.variance != 0) ...[
             const SizedBox(height: 14),
             _ReasonSelector(
               value: item.reason,
@@ -1071,19 +944,23 @@ class _ReasonSelector extends StatelessWidget {
 }
 
 class _CountBottomBar extends StatelessWidget {
-  final bool isOpening;
   final int savedCount;
+  final int itemCount;
+  final int missingReasons;
   final VoidCallback onPrimaryPressed;
 
   const _CountBottomBar({
     Key? key,
-    required this.isOpening,
     required this.savedCount,
+    required this.itemCount,
+    required this.missingReasons,
     required this.onPrimaryPressed,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final hasMissingReasons = missingReasons > 0;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
       decoration: const BoxDecoration(
@@ -1104,19 +981,19 @@ class _CountBottomBar extends StatelessWidget {
           children: [
             Row(
               children: [
-                if (!isOpening) ...[
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppColors.appBlue,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.inventory_2_outlined,
-                        color: Colors.white),
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.appBlue,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  const SizedBox(width: 10),
-                ],
+                  child: const Icon(
+                    Icons.inventory_2_outlined,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 10),
                 Text.rich(
                   TextSpan(
                     children: [
@@ -1127,7 +1004,7 @@ class _CountBottomBar extends StatelessWidget {
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const TextSpan(text: '/30 saved'),
+                      TextSpan(text: ' of $itemCount saved'),
                     ],
                   ),
                   style: const TextStyle(
@@ -1140,14 +1017,19 @@ class _CountBottomBar extends StatelessWidget {
                 Row(
                   children: [
                     Icon(
-                      isOpening ? Icons.check_circle : Icons.error_outline,
-                      color:
-                          isOpening ? AppColors.success : AppColors.mutedText,
+                      hasMissingReasons
+                          ? Icons.error_outline
+                          : Icons.check_circle,
+                      color: hasMissingReasons
+                          ? AppColors.mutedText
+                          : AppColors.success,
                       size: 18,
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      isOpening ? 'Ready to submit' : 'Reasons required',
+                      hasMissingReasons
+                          ? 'Reasons required'
+                          : 'Ready to review',
                       style: const TextStyle(
                         color: AppColors.mutedText,
                         fontSize: 14,
@@ -1172,20 +1054,18 @@ class _CountBottomBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      isOpening ? 'Submit opening counts' : 'Review closing',
-                      style: const TextStyle(
+                      'Review closing',
+                      style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    if (!isOpening) ...[
-                      const SizedBox(width: 12),
-                      const Icon(Icons.arrow_forward, size: 20),
-                    ],
+                    SizedBox(width: 12),
+                    Icon(Icons.arrow_forward, size: 20),
                   ],
                 ),
               ),
