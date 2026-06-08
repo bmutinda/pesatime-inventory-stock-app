@@ -9,8 +9,11 @@ import 'package:inventory_app/screens/stock_count/closing/index.dart';
 import 'package:inventory_app/screens/stock_count/opening/index.dart';
 import 'package:inventory_app/screens/submission_success/index.dart';
 import 'package:flutter/material.dart' hide Router;
+import 'package:intl/date_symbol_data_local.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting();
   runApp(const MyApp());
 }
 
