@@ -198,7 +198,14 @@ class _HomeHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const SizedBox(width: 44),
+          SizedBox(
+            width: 30,
+            height: 30,
+            child: Image.asset(
+              'assets/images/icon.png',
+              fit: BoxFit.contain,
+            ),
+          ),
           const Spacer(),
           Text(
             title,
@@ -209,21 +216,7 @@ class _HomeHeader extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          Container(
-            width: 44,
-            height: 44,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppColors.appBlue,
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF9FC3FF)),
-            ),
-            child: const Icon(
-              Icons.person,
-              color: Colors.white,
-              size: 24,
-            ),
-          ),
+          const SizedBox(width: 44),
         ],
       ),
     );
