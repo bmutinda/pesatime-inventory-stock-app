@@ -3,10 +3,9 @@
     {
       "name": "Default",
       "files": [
-        ".vscode/changelists.json",
-        ".vscode/numbered-bookmarks.json",
-        "lib/screens/stock_count/opening/index.dart",
-        "lib/services/stock_sessions/index.dart"
+        "lib/services/stock_sessions/index.dart",
+        "lib/screens/stock_count/closing/index.dart",
+        ".vscode/changelists.json"
       ]
     }
   ],

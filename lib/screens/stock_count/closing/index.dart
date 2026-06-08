@@ -210,22 +210,98 @@ class _ClosingStockScreenState extends State<ClosingStockScreen> {
   }
 }
 
-class ClosingReviewScreen extends StatelessWidget {
+class ClosingReviewScreen extends StatefulWidget {
   const ClosingReviewScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  State<ClosingReviewScreen> createState() => _ClosingReviewScreenState();
+}
+
+class _ClosingReviewScreenState extends State<ClosingReviewScreen> {
+  StockSession? _session;
+  List<_CountItem> _items = const [];
+  bool _isSubmitting = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_session != null || _items.isNotEmpty) return;
+
     final Object? args = ModalRoute.of(context)?.settings.arguments;
-    final StockSession? session =
+    _session =
         args is Map<String, dynamic> ? args['session'] as StockSession? : null;
     final Object? itemArgs =
         args is Map<String, dynamic> ? args['items'] : null;
-    final List<_CountItem> items =
-        itemArgs is List<_CountItem> ? itemArgs : const [];
+    _items = itemArgs is List<_CountItem> ? itemArgs : const [];
+  }
 
-    final int varianceCount = items.where((item) => item.variance != 0).length;
-    final int missingReasons =
-        items.where((item) => item.variance != 0 && item.reason == null).length;
+  Future<void> _submitClosingStock() async {
+    final session = _session;
+    final missingReasons = _missingReasons;
+    if (session == null ||
+        session.id.isEmpty ||
+        missingReasons > 0 ||
+        _isSubmitting) {
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await StockSessionService.submitClosingStock(session.id);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+      });
+      _showError(error);
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _isSubmitting = false;
+    });
+
+    Navigator.of(context).pushNamed(
+      '/submission-success',
+      arguments: {
+        'countType': 'Closing stock',
+        'title': 'Closing stock submitted',
+        'store': session.store,
+        'items': _items.length,
+        'variances': _varianceCount,
+      },
+    );
+  }
+
+  void _showError(Object error) {
+    final message = error.toString().replaceFirst('Exception: ', '').trim();
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            message.isEmpty ? 'Unable to submit closing stock.' : message,
+          ),
+          backgroundColor: const Color(0xFFE11D48),
+        ),
+      );
+  }
+
+  int get _varianceCount => _items.where((item) => item.variance != 0).length;
+
+  int get _missingReasons =>
+      _items.where((item) => item.variance != 0 && item.reason == null).length;
+
+  @override
+  Widget build(BuildContext context) {
+    final session = _session;
+    final items = _items;
+    final varianceCount = _varianceCount;
+    final missingReasons = _missingReasons;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -271,9 +347,9 @@ class ClosingReviewScreen extends StatelessWidget {
         ),
         bottomNavigationBar: _ReviewBottomBar(
           session: session,
-          itemCount: items.length,
-          varianceCount: varianceCount,
           disabled: missingReasons > 0,
+          isSubmitting: _isSubmitting,
+          onSubmit: _submitClosingStock,
         ),
       ),
     );
@@ -1300,20 +1376,22 @@ class _ReviewQuantity extends StatelessWidget {
 
 class _ReviewBottomBar extends StatelessWidget {
   final StockSession? session;
-  final int itemCount;
-  final int varianceCount;
   final bool disabled;
+  final bool isSubmitting;
+  final Future<void> Function() onSubmit;
 
   const _ReviewBottomBar({
     Key? key,
     required this.session,
-    required this.itemCount,
-    required this.varianceCount,
     required this.disabled,
+    required this.isSubmitting,
+    required this.onSubmit,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final canSubmit = !disabled && !isSubmitting && session != null;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
       decoration: const BoxDecoration(
@@ -1333,18 +1411,7 @@ class _ReviewBottomBar extends StatelessWidget {
           width: double.infinity,
           height: 52,
           child: ElevatedButton(
-            onPressed: disabled
-                ? null
-                : () => Navigator.of(context).pushNamed(
-                      '/submission-success',
-                      arguments: {
-                        'countType': 'Closing stock',
-                        'title': 'Closing stock submitted',
-                        'store': session?.store ?? 'Location',
-                        'items': itemCount,
-                        'variances': varianceCount,
-                      },
-                    ),
+            onPressed: canSubmit ? onSubmit : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.appBlue,
               foregroundColor: Colors.white,
@@ -1355,12 +1422,32 @@ class _ReviewBottomBar extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: Text(
-              disabled ? 'Add variance reasons' : 'Submit closing count',
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (isSubmitting) ...[
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                Text(
+                  isSubmitting
+                      ? 'Submitting closing'
+                      : disabled
+                          ? 'Add variance reasons'
+                          : 'Submit closing',
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
