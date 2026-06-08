@@ -161,15 +161,7 @@ class _HistoryCard extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: () => Navigator.of(context).pushNamed(
                     '/history-detail',
-                    arguments: {
-                      'title': item.title,
-                      'store': item.store,
-                      'status': item.status,
-                      'timestamp': item.dateText,
-                      'items': item.totalItems,
-                      'variances': item.totalVariance,
-                      'statusColor': item.statusColor,
-                    },
+                    arguments: item,
                   ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor:

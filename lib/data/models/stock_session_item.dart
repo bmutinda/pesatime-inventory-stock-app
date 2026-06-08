@@ -7,6 +7,8 @@ class StockSessionItem {
   final String sku;
   final double openingQty;
   final double closingQty;
+  final double varianceQty;
+  final String varianceReason;
 
   const StockSessionItem({
     required this.id,
@@ -15,6 +17,8 @@ class StockSessionItem {
     required this.sku,
     required this.openingQty,
     required this.closingQty,
+    required this.varianceQty,
+    required this.varianceReason,
   });
 
   factory StockSessionItem.fromJson(Map<String, dynamic> json) {
@@ -27,6 +31,8 @@ class StockSessionItem {
       sku: ApiUtils.readString(item, ['sku'], defaultValue: '-'),
       openingQty: ApiUtils.readDouble(json, ['openingQty']),
       closingQty: ApiUtils.readDouble(json, ['closingQty']),
+      varianceQty: ApiUtils.readDouble(json, ['varianceQty']),
+      varianceReason: ApiUtils.readString(json, ['varianceReason']),
     );
   }
 }

@@ -36,21 +36,9 @@ class StockSession {
 
     return StockSession(
       id: ApiUtils.readString(json, ['_id']),
-      title: ApiUtils.readString(
-        json,
-        ['name'],
-        defaultValue: 'Stock session',
-      ),
-      store: ApiUtils.readString(
-        location,
-        ['name'],
-        defaultValue: 'Location',
-      ),
-      status: ApiUtils.readString(
-        json,
-        ['status'],
-        defaultValue: 'open',
-      ),
+      title: ApiUtils.readString(json, ['name'], defaultValue: 'Stock session'),
+      store: ApiUtils.readString(location, ['name'], defaultValue: 'Location'),
+      status: ApiUtils.readString(json, ['status'], defaultValue: 'open'),
       dateText: formatHumanReadableDateTimeString(
         ApiUtils.readString(json, ['createdAt']),
         fallback: 'Today',

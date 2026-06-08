@@ -1515,7 +1515,7 @@ class _CountItem {
   factory _CountItem.fromSessionItem(StockSessionItem item) {
     final int closingQty = item.closingQty.round();
     final int openingQty = item.openingQty.round();
-    final int variance = closingQty - openingQty;
+    final int variance = item.varianceQty.round();
 
     return _CountItem(
       lineId: item.id,
@@ -1525,6 +1525,7 @@ class _CountItem {
       expected: openingQty,
       opening: openingQty,
       variance: variance,
+      reason: item.varianceReason.isEmpty ? null : item.varianceReason,
       saved: item.closingQty > 0,
     );
   }
