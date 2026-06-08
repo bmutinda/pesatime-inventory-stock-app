@@ -3,9 +3,8 @@
     {
       "name": "Default",
       "files": [
-        "lib/screens/home/history.dart",
-        ".vscode/changelists.json",
-        "lib/data/models/stock_session.dart"
+        "lib/screens/stock_count/closing/index.dart",
+        ".vscode/changelists.json"
       ]
     }
   ],

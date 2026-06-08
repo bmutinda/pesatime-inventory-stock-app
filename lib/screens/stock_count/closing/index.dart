@@ -1176,19 +1176,6 @@ class _CountBottomBar extends StatelessWidget {
           children: [
             Row(
               children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: AppColors.appBlue,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.inventory_2_outlined,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 10),
                 Text.rich(
                   TextSpan(
                     children: [
