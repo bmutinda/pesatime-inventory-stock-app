@@ -16,8 +16,17 @@ class _ClosingStockScreenState extends State<ClosingStockScreen> {
   String? _sessionId;
   StockSession? _session;
   List<_CountItem> _items = const [];
+  final TextEditingController _searchController = TextEditingController();
   bool _isLoading = true;
   String? _errorMessage;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  String _searchQuery = '';
 
   @override
   void didChangeDependencies() {
@@ -84,6 +93,7 @@ class _ClosingStockScreenState extends State<ClosingStockScreen> {
     final missingReasons = _items
         .where((item) => item.variance != 0 && item.reason == null)
         .length;
+    final filteredIndexes = _filteredItemIndexes;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -117,12 +127,22 @@ class _ClosingStockScreenState extends State<ClosingStockScreen> {
                         itemCount: _items.length,
                       ),
                       const SizedBox(height: 16),
+                      _ItemSearchField(
+                        controller: _searchController,
+                        onChanged: _updateSearchQuery,
+                        onClear: _clearSearch,
+                      ),
+                      const SizedBox(height: 14),
                       if (_items.isEmpty)
                         const _EmptyState(
                           message: 'No items found for this stock session.',
                         )
+                      else if (filteredIndexes.isEmpty)
+                        const _EmptyState(
+                          message: 'No items match your search.',
+                        )
                       else
-                        for (int index = 0; index < _items.length; index++) ...[
+                        for (final index in filteredIndexes) ...[
                           _CountItemCard(
                             item: _items[index],
                             onDecrease: () => _changeQuantity(index, -1),
@@ -172,6 +192,36 @@ class _ClosingStockScreenState extends State<ClosingStockScreen> {
         _items[index].reason = null;
       }
     });
+  }
+
+  List<int> get _filteredItemIndexes {
+    final query = _searchQuery.trim().toLowerCase();
+    if (query.isEmpty) {
+      return List<int>.generate(_items.length, (index) => index);
+    }
+
+    final indexes = <int>[];
+    for (int index = 0; index < _items.length; index++) {
+      final item = _items[index];
+      final name = item.name.toLowerCase();
+      final sku = item.sku.toLowerCase();
+      if (name.contains(query) || sku.contains(query)) {
+        indexes.add(index);
+      }
+    }
+
+    return indexes;
+  }
+
+  void _updateSearchQuery(String value) {
+    setState(() {
+      _searchQuery = value;
+    });
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    _updateSearchQuery('');
   }
 
   Future<void> _saveItem(int index) async {
@@ -629,6 +679,75 @@ class _EmptyState extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ItemSearchField extends StatelessWidget {
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+
+  const _ItemSearchField({
+    Key? key,
+    required this.controller,
+    required this.onChanged,
+    required this.onClear,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, value, child) {
+        final hasText = value.text.isNotEmpty;
+
+        return TextField(
+          controller: controller,
+          onChanged: onChanged,
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            hintText: 'Search items',
+            hintStyle: const TextStyle(
+              color: AppColors.inputIcon,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+            prefixIcon: const Icon(
+              Icons.search,
+              color: AppColors.mutedText,
+              size: 24,
+            ),
+            suffixIcon: hasText
+                ? IconButton(
+                    onPressed: onClear,
+                    icon: const Icon(
+                      Icons.clear,
+                      color: AppColors.mutedText,
+                      size: 22,
+                    ),
+                  )
+                : null,
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 15,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFFD0D7E2)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(
+                color: AppColors.appBlue,
+                width: 1.4,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
