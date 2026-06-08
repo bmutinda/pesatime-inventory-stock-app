@@ -120,6 +120,10 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
                         timestamp: session.dateText,
                         statusColor: session.statusColor,
                       ),
+                      if (session.rejectionNote.isNotEmpty) ...[
+                        const SizedBox(height: 18),
+                        _RejectionNoteCard(note: session.rejectionNote),
+                      ],
                       const SizedBox(height: 18),
                       Row(
                         children: [
@@ -310,6 +314,55 @@ class _StatCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _RejectionNoteCard extends StatelessWidget {
+  final String note;
+
+  const _RejectionNoteCard({Key? key, required this.note}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7F7),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFFECACA)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline, color: Color(0xFFE11D48)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Rejection note',
+                  style: TextStyle(
+                    color: AppColors.darkText,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  note,
+                  style: const TextStyle(
+                    color: AppColors.mutedText,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

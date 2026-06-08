@@ -15,6 +15,7 @@ class StockSession {
   final int totalVariance;
   final bool openingLocked;
   final bool closingLocked;
+  final String rejectionNote;
 
   const StockSession({
     required this.id,
@@ -28,6 +29,7 @@ class StockSession {
     required this.totalVariance,
     required this.openingLocked,
     required this.closingLocked,
+    required this.rejectionNote,
   });
 
   factory StockSession.fromJson(Map<String, dynamic> json) {
@@ -49,6 +51,7 @@ class StockSession {
       totalVariance: ApiUtils.readInt(json, ['totalVariance']),
       openingLocked: ApiUtils.readBool(json, 'openingLocked'),
       closingLocked: ApiUtils.readBool(json, 'closingLocked'),
+      rejectionNote: ApiUtils.readString(json, ['rejectionNote']),
     );
   }
 
@@ -80,6 +83,9 @@ class StockSession {
 
   Color get statusColor {
     final normalizedStatus = status.toLowerCase();
+    if (normalizedStatus == 'rejected' || normalizedStatus.contains('reject')) {
+      return const Color(0xFFE11D48);
+    }
     if (normalizedStatus == 'open') {
       return AppColors.success;
     }
