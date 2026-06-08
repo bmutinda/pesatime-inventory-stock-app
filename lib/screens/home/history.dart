@@ -140,12 +140,15 @@ class _HistoryCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     _IconText(
                       icon: rejected ? Icons.cancel : Icons.access_time,
-                      text: item.dateText,
+                      text: item.historyDateText,
                     ),
                   ],
                 ),
               ),
-              _StatusPill(text: item.status, color: item.statusColor),
+              _StatusPill(
+                text: item.status.toUpperCase(),
+                color: item.statusColor,
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -186,9 +189,9 @@ class _HistoryCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(7),
                     ),
                   ),
-                  child: const Text(
-                    'View',
-                    style: TextStyle(
+                  child: Text(
+                    rejected ? 'Review' : 'View',
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                     ),
@@ -197,7 +200,29 @@ class _HistoryCard extends StatelessWidget {
               ),
             ],
           ),
+          if (item.rejectionNote.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _RejectionNote(note: item.rejectionNote),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _RejectionNote extends StatelessWidget {
+  final String note;
+
+  const _RejectionNote({Key? key, required this.note}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      note,
+      style: const TextStyle(
+        color: Color(0xFFE11D48),
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
       ),
     );
   }

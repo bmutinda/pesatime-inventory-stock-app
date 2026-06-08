@@ -3,11 +3,9 @@
     {
       "name": "Default",
       "files": [
-        "lib/screens/home/index.dart",
-        "assets/images/icon-bg.png",
-        "assets/images/icon.png",
+        "lib/screens/home/history.dart",
         ".vscode/changelists.json",
-        "pubspec.yaml"
+        "lib/data/models/stock_session.dart"
       ]
     }
   ],

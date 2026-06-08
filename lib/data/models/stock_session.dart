@@ -9,6 +9,10 @@ class StockSession {
   final String store;
   final String status;
   final String dateText;
+  final String createdAtText;
+  final String closedOnText;
+  final String approvedOnText;
+  final String rejectedOnText;
   final int openingSaved;
   final int closingSaved;
   final int totalItems;
@@ -23,6 +27,10 @@ class StockSession {
     required this.store,
     required this.status,
     required this.dateText,
+    required this.createdAtText,
+    required this.closedOnText,
+    required this.approvedOnText,
+    required this.rejectedOnText,
     required this.openingSaved,
     required this.closingSaved,
     required this.totalItems,
@@ -35,15 +43,26 @@ class StockSession {
   factory StockSession.fromJson(Map<String, dynamic> json) {
     final Map<String, dynamic>? location =
         json['location'] is Map<String, dynamic> ? json['location'] : null;
+    final createdAtText = formatHumanReadableDateTimeString(
+      ApiUtils.readString(json, ['createdAt']),
+      fallback: 'Today',
+    );
 
     return StockSession(
       id: ApiUtils.readString(json, ['_id']),
       title: ApiUtils.readString(json, ['name'], defaultValue: 'Stock session'),
       store: ApiUtils.readString(location, ['name'], defaultValue: 'Location'),
       status: ApiUtils.readString(json, ['status'], defaultValue: 'open'),
-      dateText: formatHumanReadableDateTimeString(
-        ApiUtils.readString(json, ['createdAt']),
-        fallback: 'Today',
+      dateText: createdAtText,
+      createdAtText: createdAtText,
+      closedOnText: formatHumanReadableDateTimeString(
+        ApiUtils.readString(json, ['closedOn']),
+      ),
+      approvedOnText: formatHumanReadableDateTimeString(
+        ApiUtils.readString(json, ['approvedOn']),
+      ),
+      rejectedOnText: formatHumanReadableDateTimeString(
+        ApiUtils.readString(json, ['rejectedOn']),
       ),
       openingSaved: ApiUtils.readInt(json, ['totalOpeningSaved']),
       closingSaved: ApiUtils.readInt(json, ['totalClosingSaved']),
@@ -67,6 +86,21 @@ class StockSession {
   }
 
   String get action => itemsSaved > 0 ? 'Continue' : 'Start';
+
+  String get historyDateText {
+    final normalizedStatus = status.toLowerCase();
+    if (normalizedStatus == 'approved' && approvedOnText.isNotEmpty) {
+      return 'Approved On: $approvedOnText';
+    }
+    if (normalizedStatus == 'rejected' && rejectedOnText.isNotEmpty) {
+      return 'Rejected On: $rejectedOnText';
+    }
+    if (closingLocked && closedOnText.isNotEmpty) {
+      return 'Submitted On: $closedOnText';
+    }
+
+    return 'Assigned On: $createdAtText';
+  }
 
   double get progress {
     if (totalItems <= 0) return 0;
