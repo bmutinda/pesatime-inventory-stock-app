@@ -3,8 +3,10 @@
     {
       "name": "Default",
       "files": [
+        ".vscode/changelists.json",
+        "README.md",
         "lib/screens/login/index.dart",
-        ".vscode/changelists.json"
+        "android/app/src/main/AndroidManifest.xml"
       ]
     }
   ],

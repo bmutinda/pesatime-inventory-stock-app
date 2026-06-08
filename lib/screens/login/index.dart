@@ -121,6 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 controller: _staffCodeController,
                                 label: 'Staff Code',
                                 hintText: 'Enter your staff code',
+                                keyboardType: TextInputType.number,
                                 prefixIcon: Icons.person_outline,
                                 textInputAction: TextInputAction.next,
                                 enabled: !_isSigningIn,

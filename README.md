@@ -29,17 +29,17 @@ flutter run --dart-define=BASE_URL=http://10.0.2.2:3550/inventory-stock-app/v1/
 Use the production API for release builds:
 
 ```bash
-flutter build apk --release --dart-define=BASE_URL=https://api.example.com/inventory-stock-app/v1/
+flutter build apk --release --dart-define=BASE_URL=https://api.pesatime.com/inventory-stock-app/v1/
 ```
 
 For an Android App Bundle:
 
 ```bash
-flutter build appbundle --release --dart-define=BASE_URL=https://api.example.com/inventory-stock-app/v1/
+flutter build appbundle --release --dart-define=BASE_URL=https://api.pesatime.com/inventory-stock-app/v1/
 ```
 
 ## Build iOS Release
 
 ```bash
-flutter build ipa --release --dart-define=BASE_URL=https://api.example.com/inventory-stock-app/v1/
+flutter build ipa --release --dart-define=BASE_URL=https://api.pesatime.com/inventory-stock-app/v1/
 ```
