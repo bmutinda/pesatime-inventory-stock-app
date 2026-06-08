@@ -93,30 +93,30 @@ class _LoginScreenState extends State<LoginScreen> {
                                 height: constraints.maxHeight < 720 ? 44 : 88,
                               ),
                               const _PesatimeBrand(),
-                              const SizedBox(height: 30),
+                              const SizedBox(height: 24),
                               const _AppPurposeBadge(),
-                              const SizedBox(height: 34),
+                              const SizedBox(height: 28),
                               const Text(
                                 'Sign in to count stock',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: AppColors.darkText,
-                                  fontSize: 32,
+                                  fontSize: 26,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
-                              const SizedBox(height: 14),
+                              const SizedBox(height: 10),
                               const Text(
                                 'Enter your staff code and PIN to\nview assigned sessions.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: AppColors.mutedText,
-                                  fontSize: 20,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.w400,
-                                  height: 1.45,
+                                  height: 1.35,
                                 ),
                               ),
-                              const SizedBox(height: 48),
+                              const SizedBox(height: 36),
                               _LoginTextField(
                                 controller: _staffCodeController,
                                 label: 'Staff Code',
@@ -125,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 textInputAction: TextInputAction.next,
                                 enabled: !_isSigningIn,
                               ),
-                              const SizedBox(height: 28),
+                              const SizedBox(height: 22),
                               _LoginTextField(
                                 controller: _pinController,
                                 label: 'PIN',
@@ -155,9 +155,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 42),
+                              const SizedBox(height: 32),
                               SizedBox(
-                                height: 64,
+                                height: 54,
                                 child: ElevatedButton(
                                   onPressed: _isSigningIn ? null : _signIn,
                                   style: ElevatedButton.styleFrom(
@@ -180,20 +180,20 @@ class _LoginScreenState extends State<LoginScreen> {
                                       : const Text(
                                           'Sign in',
                                           style: TextStyle(
-                                            fontSize: 21,
+                                            fontSize: 17,
                                             fontWeight: FontWeight.w700,
                                           ),
                                         ),
                                 ),
                               ),
-                              const SizedBox(height: 26),
+                              const SizedBox(height: 18),
                               TextButton(
                                 onPressed: _showManagerContact,
                                 child: const Text(
                                   'Forgot PIN? Contact manager',
                                   style: TextStyle(
                                     color: AppColors.appBlue,
-                                    fontSize: 18,
+                                    fontSize: 15,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -264,7 +264,7 @@ class _PesatimeBrand extends StatelessWidget {
     return Center(
       child: Image.asset(
         'assets/images/logo.png',
-        width: 260,
+        width: 220,
         fit: BoxFit.contain,
       ),
     );
@@ -282,14 +282,14 @@ class _AppPurposeBadge extends StatelessWidget {
         Icon(
           Icons.inventory_2_outlined,
           color: AppColors.appBlue,
-          size: 30,
+          size: 22,
         ),
-        SizedBox(width: 12),
+        SizedBox(width: 8),
         Text(
           'Stock Taking App',
           style: TextStyle(
             color: AppColors.appBlue,
-            fontSize: 20,
+            fontSize: 15,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -333,11 +333,11 @@ class _LoginTextField extends StatelessWidget {
           label,
           style: const TextStyle(
             color: AppColors.darkText,
-            fontSize: 17,
+            fontSize: 14,
             fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         TextField(
           controller: controller,
           enabled: enabled,
@@ -347,28 +347,28 @@ class _LoginTextField extends StatelessWidget {
           onSubmitted: onSubmitted,
           style: const TextStyle(
             color: AppColors.darkText,
-            fontSize: 19,
+            fontSize: 16,
             fontWeight: FontWeight.w500,
           ),
           decoration: InputDecoration(
             hintText: hintText,
             hintStyle: const TextStyle(
               color: AppColors.inputIcon,
-              fontSize: 19,
+              fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
             prefixIcon: Icon(
               prefixIcon,
               color: AppColors.inputIcon,
-              size: 28,
+              size: 22,
             ),
             suffixIcon: suffixIcon,
             suffixIconColor: AppColors.inputIcon,
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 18,
-              vertical: 22,
+              horizontal: 16,
+              vertical: 16,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
@@ -409,14 +409,14 @@ class _LoginFooter extends StatelessWidget {
               Icon(
                 Icons.circle,
                 color: AppColors.success,
-                size: 14,
+                size: 10,
               ),
-              SizedBox(width: 12),
+              SizedBox(width: 8),
               Text(
                 'Secure staff access',
                 style: TextStyle(
                   color: AppColors.mutedText,
-                  fontSize: 17,
+                  fontSize: 14,
                 ),
               ),
             ],
