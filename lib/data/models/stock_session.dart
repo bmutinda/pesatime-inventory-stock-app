@@ -120,6 +120,10 @@ class StockSession {
     if (normalizedStatus == 'rejected' || normalizedStatus.contains('reject')) {
       return const Color(0xFFE11D48);
     }
+    if (normalizedStatus == 'approved' ||
+        normalizedStatus.contains('approve')) {
+      return AppColors.success;
+    }
     if (normalizedStatus == 'open') {
       return AppColors.success;
     }
