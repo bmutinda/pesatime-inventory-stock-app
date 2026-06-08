@@ -17,6 +17,7 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
   StockSession? _session;
   List<_CountItem> _items = const [];
   bool _isLoading = true;
+  bool _isSubmitting = false;
   String? _errorMessage;
 
   @override
@@ -73,9 +74,12 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
     });
   }
 
-  String _readErrorMessage(Object error) {
+  String _readErrorMessage(
+    Object error, {
+    String fallback = 'Unable to load opening stock.',
+  }) {
     final message = error.toString().replaceFirst('Exception: ', '').trim();
-    return message.isEmpty ? 'Unable to load opening stock.' : message;
+    return message.isEmpty ? fallback : message;
   }
 
   @override
@@ -138,15 +142,45 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
         bottomNavigationBar: _CountBottomBar(
           savedCount: _items.where((item) => item.saved).length,
           itemCount: _items.length,
+          isSubmitting: _isSubmitting,
           onPrimaryPressed: _submitOpeningStock,
         ),
       ),
     );
   }
 
-  void _submitOpeningStock() {
+  Future<void> _submitOpeningStock() async {
+    final sessionId = _sessionId;
     final session = _session;
-    if (session == null) return;
+    final allItemsSaved =
+        _items.isNotEmpty && _items.every((item) => item.saved);
+    if (sessionId == null ||
+        sessionId.isEmpty ||
+        session == null ||
+        !allItemsSaved ||
+        _isSubmitting) {
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await StockSessionService.submitOpeningStock(sessionId);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+      });
+      _showError(error, fallback: 'Unable to submit opening stock.');
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _isSubmitting = false;
+    });
 
     Navigator.of(context).pushNamed(
       '/submission-success',
@@ -185,15 +219,22 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
       });
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(_readErrorMessage(error)),
-            backgroundColor: const Color(0xFFE11D48),
-          ),
-        );
+      _showError(error, fallback: 'Unable to save opening quantity.');
     }
+  }
+
+  void _showError(
+    Object error, {
+    String fallback = 'Unable to load opening stock.',
+  }) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(_readErrorMessage(error, fallback: fallback)),
+          backgroundColor: const Color(0xFFE11D48),
+        ),
+      );
   }
 }
 
@@ -700,17 +741,22 @@ class _SavedLabel extends StatelessWidget {
 class _CountBottomBar extends StatelessWidget {
   final int savedCount;
   final int itemCount;
-  final VoidCallback onPrimaryPressed;
+  final bool isSubmitting;
+  final Future<void> Function() onPrimaryPressed;
 
   const _CountBottomBar({
     Key? key,
     required this.savedCount,
     required this.itemCount,
+    required this.isSubmitting,
     required this.onPrimaryPressed,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final allItemsSaved = itemCount > 0 && savedCount == itemCount;
+    final canSubmit = allItemsSaved && !isSubmitting;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
       decoration: const BoxDecoration(
@@ -751,14 +797,23 @@ class _CountBottomBar extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.check_circle,
-                        color: AppColors.success, size: 18),
-                    SizedBox(width: 6),
+                    Icon(
+                      allItemsSaved ? Icons.check_circle : Icons.error_outline,
+                      color: allItemsSaved
+                          ? AppColors.success
+                          : AppColors.mutedText,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 6),
                     Text(
-                      'Ready to submit',
-                      style: TextStyle(
+                      isSubmitting
+                          ? 'Submitting'
+                          : allItemsSaved
+                              ? 'Ready to submit'
+                              : 'Save all items',
+                      style: const TextStyle(
                         color: AppColors.mutedText,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -773,21 +828,34 @@ class _CountBottomBar extends StatelessWidget {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: onPrimaryPressed,
+                onPressed: canSubmit ? onPrimaryPressed : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.appBlue,
                   foregroundColor: Colors.white,
+                  disabledBackgroundColor: const Color(0xFFD0D7E2),
+                  disabledForegroundColor: AppColors.mutedText,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    if (isSubmitting) ...[
+                      const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                    ],
                     Text(
-                      'Submit opening counts',
-                      style: TextStyle(
+                      isSubmitting ? 'Submitting opening' : 'Submit opening',
+                      style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
                       ),

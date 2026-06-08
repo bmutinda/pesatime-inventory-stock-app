@@ -92,6 +92,25 @@ abstract class StockSessionService {
     }
   }
 
+  static Future<void> submitOpeningStock(String sessionId) async {
+    try {
+      final response = await ApiClient.post<Map<String, dynamic>>(
+        'stock-sessions/$sessionId/lock-opening',
+      );
+      final apiResponse = ApiResponse.fromJson(response.data);
+
+      if (apiResponse == null || !apiResponse.success) {
+        throw Exception(
+          apiResponse?.message.isEmpty ?? true
+              ? 'Unable to submit opening stock.'
+              : apiResponse!.message,
+        );
+      }
+    } on DioException catch (error) {
+      throw Exception(ApiUtils.readDioError(error));
+    }
+  }
+
   static Future<void> submitClosingQty({
     required String sessionId,
     required String lineId,
