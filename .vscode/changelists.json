@@ -3,8 +3,9 @@
     {
       "name": "Default",
       "files": [
-        "lib/data/models/stock_session.dart",
-        ".vscode/changelists.json"
+        ".vscode/changelists.json",
+        "lib/data/models/user.dart",
+        "lib/screens/home/profile.dart"
       ]
     }
   ],

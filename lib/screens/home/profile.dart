@@ -54,8 +54,13 @@ class _ProfileTabState extends State<_ProfileTab> {
             message: _errorMessage!,
             onRetry: _loadProfile,
           )
-        else if (_user != null)
+        else if (_user != null) ...[
           _ProfileHeaderCard(user: _user!),
+          if (_user!.businessName.isNotEmpty || _user!.unitName.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            _BusinessUnitCard(user: _user!),
+          ],
+        ],
         const SizedBox(height: 14),
         const _LogoutButton(),
       ],
@@ -141,6 +146,51 @@ class _ProfileHeaderCard extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BusinessUnitCard extends StatelessWidget {
+  final User user;
+
+  const _BusinessUnitCard({Key? key, required this.user}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFD0D7E2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Organization',
+            style: TextStyle(
+              color: AppColors.darkText,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          if (user.businessName.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _ProfileMetaRow(
+              icon: Icons.business_outlined,
+              text: user.businessName,
+            ),
+          ],
+          if (user.unitName.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            _ProfileMetaRow(
+              icon: Icons.storefront_outlined,
+              text: user.unitName,
+            ),
+          ],
         ],
       ),
     );
