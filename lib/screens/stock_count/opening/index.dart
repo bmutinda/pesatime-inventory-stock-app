@@ -148,6 +148,8 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
                             item: _items[index],
                             onDecrease: () => _changeQuantity(index, -1),
                             onIncrease: () => _changeQuantity(index, 1),
+                            onQuantityChanged: (value) =>
+                                _updateQuantity(index, value),
                             onSave: () => _saveItem(index),
                           ),
                           const SizedBox(height: 14),
@@ -214,10 +216,17 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
     );
   }
 
-  void _changeQuantity(int index, int change) {
+  void _changeQuantity(int index, double change) {
     setState(() {
-      final int nextValue = _items[index].quantity + change;
-      _items[index].quantity = nextValue < 0 ? 0 : nextValue;
+      final double nextValue = _items[index].quantity + change;
+      _items[index].quantity = _roundQuantity(nextValue < 0 ? 0 : nextValue);
+      _items[index].saved = false;
+    });
+  }
+
+  void _updateQuantity(int index, double value) {
+    setState(() {
+      _items[index].quantity = _roundQuantity(value < 0 ? 0 : value);
       _items[index].saved = false;
     });
   }
@@ -260,7 +269,7 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
       await StockSessionService.submitOpeningQty(
         sessionId: sessionId,
         lineId: _items[index].lineId,
-        openingQty: _items[index].quantity.toDouble(),
+        openingQty: _items[index].quantity,
       );
 
       if (!mounted) return;
@@ -661,6 +670,7 @@ class _CountItemCard extends StatelessWidget {
   final _CountItem item;
   final VoidCallback onDecrease;
   final VoidCallback onIncrease;
+  final ValueChanged<double> onQuantityChanged;
   final VoidCallback onSave;
 
   const _CountItemCard({
@@ -668,6 +678,7 @@ class _CountItemCard extends StatelessWidget {
     required this.item,
     required this.onDecrease,
     required this.onIncrease,
+    required this.onQuantityChanged,
     required this.onSave,
   }) : super(key: key);
 
@@ -728,6 +739,7 @@ class _CountItemCard extends StatelessWidget {
                 value: item.quantity,
                 onDecrease: onDecrease,
                 onIncrease: onIncrease,
+                onChanged: onQuantityChanged,
               ),
               const Spacer(),
               _SaveButton(onPressed: onSave),
@@ -743,43 +755,98 @@ class _CountItemCard extends StatelessWidget {
   }
 }
 
-class _QuantityStepper extends StatelessWidget {
-  final int value;
+class _QuantityStepper extends StatefulWidget {
+  final double value;
   final VoidCallback onDecrease;
   final VoidCallback onIncrease;
+  final ValueChanged<double> onChanged;
 
   const _QuantityStepper({
     Key? key,
     required this.value,
     required this.onDecrease,
     required this.onIncrease,
+    required this.onChanged,
   }) : super(key: key);
+
+  @override
+  State<_QuantityStepper> createState() => _QuantityStepperState();
+}
+
+class _QuantityStepperState extends State<_QuantityStepper> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: _formatQuantity(widget.value));
+    _focusNode = FocusNode()..addListener(_handleFocusChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant _QuantityStepper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_focusNode.hasFocus && oldWidget.value != widget.value) {
+      _controller.text = _formatQuantity(widget.value);
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_handleFocusChanged);
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleFocusChanged() {
+    if (!_focusNode.hasFocus) {
+      _controller.text = _formatQuantity(widget.value);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 42,
-      width: 184,
+      width: 204,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(7),
         border: Border.all(color: const Color(0xFFD0D7E2)),
       ),
       child: Row(
         children: [
-          _StepperButton(icon: Icons.remove, onPressed: onDecrease),
+          _StepperButton(icon: Icons.remove, onPressed: widget.onDecrease),
           Expanded(
             child: Center(
-              child: Text(
-                '$value',
+              child: TextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                onChanged: (value) {
+                  widget.onChanged(double.tryParse(value) ?? 0);
+                },
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [
+                  _quantityInputFormatter,
+                ],
+                textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: AppColors.darkText,
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
                 ),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  isCollapsed: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
               ),
             ),
           ),
-          _StepperButton(icon: Icons.add, onPressed: onIncrease),
+          _StepperButton(icon: Icons.add, onPressed: widget.onIncrease),
         ],
       ),
     );
@@ -1025,7 +1092,7 @@ class _CountItem {
   final String lineId;
   final String name;
   final String sku;
-  int quantity;
+  double quantity;
   bool saved;
 
   _CountItem({
@@ -1041,7 +1108,7 @@ class _CountItem {
       lineId: item.id,
       name: item.name,
       sku: item.sku,
-      quantity: item.openingQty.round(),
+      quantity: _roundQuantity(item.openingQty),
       saved: item.openingQty > 0,
     );
   }
@@ -1056,3 +1123,19 @@ class _CountItem {
     );
   }
 }
+
+double _roundQuantity(double value) {
+  return double.parse(value.toStringAsFixed(2));
+}
+
+String _formatQuantity(double value) {
+  final text = _roundQuantity(value).toStringAsFixed(2);
+  return text.replaceFirst(RegExp(r'\.?0+$'), '');
+}
+
+final TextInputFormatter _quantityInputFormatter =
+    TextInputFormatter.withFunction((oldValue, newValue) {
+  return RegExp(r'^\d*\.?\d{0,2}$').hasMatch(newValue.text)
+      ? newValue
+      : oldValue;
+});
