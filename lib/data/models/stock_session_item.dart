@@ -7,6 +7,7 @@ class StockSessionItem {
   final String sku;
   final double openingQty;
   final double closingQty;
+  final double expectedClosingQty;
   final double varianceQty;
   final String varianceReason;
 
@@ -17,6 +18,7 @@ class StockSessionItem {
     required this.sku,
     required this.openingQty,
     required this.closingQty,
+    required this.expectedClosingQty,
     required this.varianceQty,
     required this.varianceReason,
   });
@@ -31,6 +33,7 @@ class StockSessionItem {
       sku: ApiUtils.readString(item, ['sku'], defaultValue: '-'),
       openingQty: ApiUtils.readDouble(json, ['openingQty']),
       closingQty: ApiUtils.readDouble(json, ['closingQty']),
+      expectedClosingQty: ApiUtils.readDouble(json, ['expectedClosingQty']),
       varianceQty: ApiUtils.readDouble(json, ['varianceQty']),
       varianceReason: ApiUtils.readString(json, ['varianceReason']),
     );
