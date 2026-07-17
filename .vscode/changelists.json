@@ -3,11 +3,8 @@
     {
       "name": "Default",
       "files": [
-        "lib/helpers/config/index.dart",
         ".vscode/changelists.json",
-        "README.md",
-        "AGENTS.md",
-        "lib/services/auth/index.dart"
+        "lib/helpers/colors.dart"
       ]
     }
   ],
