@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       navigatorKey: NavigationService.navigatorKey,
-      title: 'Pesatime Inventory STA',
+      title: 'Pesatime Stocktake',
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {

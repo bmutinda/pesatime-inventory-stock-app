@@ -31,8 +31,23 @@ class _SplashScreenState extends State<SplashScreen> {
     return const Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: CircularProgressIndicator(
-          color: AppColors.appBlue,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Pesatime Stocktake',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.appBlue,
+                fontSize: 26,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            SizedBox(height: 24),
+            CircularProgressIndicator(
+              color: AppColors.appBlue,
+            ),
+          ],
         ),
       ),
     );

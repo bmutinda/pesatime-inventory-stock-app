@@ -1,5 +1,5 @@
 name: inventory_app
-description: Pesatime Inventory App.
+description: Pesatime Stocktake.
 publish_to: 'none'
 version: 1.0.0+1
 
