@@ -79,13 +79,9 @@ abstract class AuthUtils {
     if (apiResponse == null || !apiResponse.success) {
       throw AuthException(apiResponse?.message ?? 'Invalid staff code.');
     }
+    print(apiResponse.data);
 
-    final codeHash = ApiUtils.readString(apiResponse.data, [
-      'code_hash',
-      'codeHash',
-      'hash',
-      'code',
-    ]);
+    final codeHash = ApiUtils.readString(apiResponse.data, ['code']);
 
     if (codeHash.isEmpty) {
       throw const AuthException('Staff code validation did not return a code.');
@@ -110,12 +106,7 @@ abstract class AuthUtils {
     if (apiResponse == null || !apiResponse.success) {
       throw AuthException(apiResponse?.message ?? 'Unable to sign in.');
     }
-
-    final token = ApiUtils.readString(apiResponse.data, [
-      'token',
-      'access_token',
-      'accessToken',
-    ]);
+    final token = ApiUtils.readString(apiResponse.data, ['token']);
 
     if (token.isEmpty) {
       throw const AuthException('Login did not return an auth token.');
