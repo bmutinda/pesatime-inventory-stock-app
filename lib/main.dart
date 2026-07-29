@@ -4,6 +4,7 @@ import 'package:inventory_app/helpers/navigator_service.dart';
 import 'package:inventory_app/screens/history_detail/index.dart';
 import 'package:inventory_app/screens/home/index.dart';
 import 'package:inventory_app/screens/login/index.dart';
+import 'package:inventory_app/screens/login/pin.dart';
 import 'package:inventory_app/screens/splash/index.dart';
 import 'package:inventory_app/screens/stock_count/closing/index.dart';
 import 'package:inventory_app/screens/stock_count/opening/index.dart';
@@ -32,6 +33,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
+        '/staff-pin': (context) => const StaffPinScreen(),
         '/home': (context) => const HomeScreen(),
         '/opening-stock': (context) => const OpeningStockScreen(),
         '/closing-stock': (context) => const ClosingStockScreen(),

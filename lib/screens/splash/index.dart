@@ -17,12 +17,30 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAuthState() async {
-    final bool loggedIn = await AuthUtils.isLoggedIn();
+    var hasActiveSession = false;
+
+    try {
+      hasActiveSession = await AuthUtils.refreshSession();
+    } on AuthException {
+      hasActiveSession = false;
+    }
+
+    if (hasActiveSession) {
+      try {
+        await AuthUtils.getMe();
+      } on AuthException {
+        hasActiveSession = false;
+      }
+    }
+
+    if (!hasActiveSession) {
+      await AuthUtils.logout();
+    }
 
     if (!mounted) return;
 
     Navigator.of(context).pushReplacementNamed(
-      loggedIn ? '/home' : '/login',
+      hasActiveSession ? '/home' : '/login',
     );
   }
 

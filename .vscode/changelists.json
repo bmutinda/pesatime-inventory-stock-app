@@ -4,7 +4,14 @@
       "name": "Default",
       "files": [
         ".vscode/changelists.json",
-        "lib/helpers/config/index.dart"
+        "lib/helpers/api/index.dart",
+        "lib/helpers/config/index.dart",
+        "lib/screens/splash/index.dart",
+        "lib/services/auth/index.dart",
+        "lib/main.dart",
+        "lib/screens/login/index.dart",
+        "lib/screens/login/pin.dart",
+        "lib/screens/login/widgets.dart"
       ]
     }
   ],

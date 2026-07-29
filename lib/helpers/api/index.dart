@@ -6,6 +6,9 @@ import 'package:inventory_app/services/device/index.dart';
 
 abstract class ApiClient {
   static const String authTokenKey = "auth_token";
+  static const String bizAccessTokenKey = "biz_access_token";
+  static const String businessIdKey = "business_id";
+  static const String unitIdKey = "unit_id";
 
   static final Dio _dio = Dio(
     BaseOptions(
@@ -15,29 +18,34 @@ abstract class ApiClient {
       headers: const {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
+        'x-app-type': 'inventory-stock-app'
       },
     ),
   )..interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final token = await SharedPreferencesManager.getString(
-            authTokenKey,
-          );
-          final deviceId = await DeviceUtils.getDeviceId();
+          final token = await SharedPreferencesManager.getString(authTokenKey);
+          final bizToken =
+              await SharedPreferencesManager.getString(bizAccessTokenKey);
+          final businessId =
+              await SharedPreferencesManager.getString(businessIdKey);
+          final unitId = await SharedPreferencesManager.getString(unitIdKey);
 
-          if (token.isNotEmpty) {
-            options.headers['Authorization'] = 'Bearer $token';
+          final deviceId = await DeviceUtils.getDeviceId();
+          options.headers['x-device-id'] = deviceId;
+
+          final bearerToken = token.isNotEmpty ? token : bizToken;
+          if (bearerToken.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $bearerToken';
           } else {
             options.headers.remove('Authorization');
           }
 
-          options.queryParameters['device_id'] = deviceId;
-
-          final data = options.data;
-          if (data is Map) {
-            final requestData = Map<String, dynamic>.from(data);
-            requestData.putIfAbsent('device_id', () => deviceId);
-            options.data = requestData;
+          if (businessId.isNotEmpty) {
+            options.headers['x-business-id'] = businessId;
+          }
+          if (unitId.isNotEmpty) {
+            options.headers['x-unit-id'] = unitId;
           }
 
           return handler.next(options);
