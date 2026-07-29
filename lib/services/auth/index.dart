@@ -112,17 +112,21 @@ abstract class AuthUtils {
       _bizRefreshTokenKey,
     );
 
-    if (!loggedIn || userRefreshToken.isEmpty || bizRefreshToken.isEmpty) {
+    if (bizRefreshToken.isEmpty) {
       return false;
     }
 
     try {
+      final requestData = <String, dynamic>{
+        'biz_refresh_token': bizRefreshToken,
+      };
+      if (loggedIn && userRefreshToken.isNotEmpty) {
+        requestData['user_refresh_token'] = userRefreshToken;
+      }
+
       final response = await ApiClient.post<Map<String, dynamic>>(
         AppConfig.authRefresh,
-        data: {
-          'biz_refresh_token': bizRefreshToken,
-          'user_refresh_token': userRefreshToken,
-        },
+        data: requestData,
       );
       final apiResponse = ApiResponse.fromJson(response.data);
 
@@ -138,20 +142,26 @@ abstract class AuthUtils {
       final user = data['user'];
       final nextBizAccess = ApiUtils.readString(biz, ['access']);
       final nextBizRefresh = ApiUtils.readString(biz, ['refresh']);
-      final nextUserAccess = ApiUtils.readString(user, ['access']);
-      final nextUserRefresh = ApiUtils.readString(user, ['refresh']);
 
       if (nextBizAccess.isEmpty || nextBizRefresh.isEmpty) {
         throw const AuthException('Refresh did not return business tokens.');
-      }
-      if (nextUserAccess.isEmpty || nextUserRefresh.isEmpty) {
-        throw const AuthException('Refresh did not return user tokens.');
       }
 
       await _saveBizSession(
         accessToken: nextBizAccess,
         refreshToken: nextBizRefresh,
       );
+
+      if (!loggedIn || user is! Map<String, dynamic>) {
+        return false;
+      }
+
+      final nextUserAccess = ApiUtils.readString(user, ['access']);
+      final nextUserRefresh = ApiUtils.readString(user, ['refresh']);
+      if (nextUserAccess.isEmpty || nextUserRefresh.isEmpty) {
+        return false;
+      }
+
       await saveSession(
         userAccessToken: nextUserAccess,
         userRefreshToken: nextUserRefresh,
