@@ -64,7 +64,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return LoginScaffold(
       title: 'Set up this device',
-      subtitle: 'Enter the device code generated from your Pesatime account.',
+      subtitle:
+          'Generate this code from Inventory Module \nStock App → Devices',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -81,16 +82,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
             enabled: !_isValidating,
             onSubmitted: (_) => _continue(),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Generate this code from your Pesatime account under Staff → Devices.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: AppColors.mutedText,
-              fontSize: 14,
-              height: 1.4,
-            ),
           ),
           const SizedBox(height: 28),
           LoginButton(

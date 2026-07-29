@@ -3,7 +3,7 @@
     {
       "name": "Default",
       "files": [
-        "lib/services/auth/index.dart",
+        "lib/screens/login/index.dart",
         ".vscode/changelists.json"
       ]
     }
