@@ -830,21 +830,26 @@ class _CountItemCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            'Expected  ${_formatQuantity(item.expected)}    |    Opening  ${_formatQuantity(item.opening)}',
-            style: const TextStyle(
-              color: AppColors.mutedText,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
+          Row(
+            children: [
+              _CountReferenceValue(
+                label: 'Expected qty',
+                value: _formatQuantity(item.expected),
+              ),
+              const SizedBox(width: 32),
+              _CountReferenceValue(
+                label: 'Opening qty',
+                value: _formatQuantity(item.opening),
+              ),
+            ],
           ),
           const SizedBox(height: 14),
           const Text(
             'Closing qty',
             style: TextStyle(
               color: AppColors.mutedText,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 8),
@@ -893,6 +898,43 @@ class _QuantityStepper extends StatefulWidget {
 
   @override
   State<_QuantityStepper> createState() => _QuantityStepperState();
+}
+
+class _CountReferenceValue extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _CountReferenceValue({
+    Key? key,
+    required this.label,
+    required this.value,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.mutedText,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          value,
+          style: const TextStyle(
+            color: AppColors.darkText,
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _QuantityStepperState extends State<_QuantityStepper> {
@@ -957,7 +999,7 @@ class _QuantityStepperState extends State<_QuantityStepper> {
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: AppColors.darkText,
-                  fontSize: 20,
+                  fontSize: 23,
                   fontWeight: FontWeight.w800,
                 ),
                 decoration: const InputDecoration(

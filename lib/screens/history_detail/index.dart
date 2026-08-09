@@ -135,6 +135,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
                             icon: Icons.inventory_2_outlined,
                             value: '$itemCount',
                             label: 'Items counted',
+                            color: AppColors.appBlue,
                           ),
                           const SizedBox(width: 12),
                           _StatCard(
@@ -142,7 +143,9 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
                                 ? Icons.check_circle_outline
                                 : Icons.warning_amber_outlined,
                             value: '$varianceCount',
-                            label: 'Variances',
+                            label: varianceCount == 1
+                                ? 'With variance'
+                                : 'With variances',
                             color: varianceCount == 0
                                 ? AppColors.success
                                 : const Color(0xFFE36C0A),
@@ -289,31 +292,52 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(14),
+        constraints: const BoxConstraints(minHeight: 96),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFD8DEE8)),
+          color: color.withOpacity(0.055),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.2)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Icon(icon, color: color, size: 26),
-            const SizedBox(height: 10),
-            Text(
-              value,
-              style: const TextStyle(
-                color: AppColors.darkText,
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(10),
               ),
+              child: Icon(icon, color: color, size: 23),
             ),
-            Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.mutedText,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      color: AppColors.darkText,
+                      fontSize: 26,
+                      height: 1,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    label,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.mutedText,
+                      fontSize: 13,
+                      height: 1.15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -527,7 +551,7 @@ class _StockPhaseSection extends StatelessWidget {
                 title,
                 style: const TextStyle(
                   color: AppColors.darkText,
-                  fontSize: 15,
+                  fontSize: 17,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -563,7 +587,7 @@ class _StockPhaseSection extends StatelessWidget {
                         color: counted
                             ? const Color(0xFF079455)
                             : AppColors.mutedText,
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -604,7 +628,7 @@ class _StockPhaseSection extends StatelessWidget {
                 ),
                 style: const TextStyle(
                   color: AppColors.mutedText,
-                  fontSize: 13,
+                  fontSize: 14,
                   height: 1.3,
                 ),
               ),
@@ -639,18 +663,18 @@ class _DetailValue extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(
             color: AppColors.mutedText,
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(height: 3),
+        const SizedBox(height: 5),
         Text(
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: valueColor ?? AppColors.darkText,
-            fontSize: 15,
+            fontSize: 20,
             fontWeight: FontWeight.w800,
           ),
         ),

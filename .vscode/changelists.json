@@ -3,10 +3,11 @@
     {
       "name": "Default",
       "files": [
-        "lib/data/models/stock_session_item.dart",
         "lib/screens/stock_count/opening/index.dart",
         "lib/screens/history_detail/index.dart",
-        ".vscode/changelists.json"
+        "lib/screens/stock_count/closing/index.dart",
+        ".vscode/changelists.json",
+        "pubspec.yaml"
       ]
     }
   ],

@@ -101,7 +101,7 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
         statusBarBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF5F7FB),
         body: SafeArea(
           child: Column(
             children: [
@@ -382,11 +382,18 @@ class _SessionSummaryCard extends StatelessWidget {
         totalItems <= 0 ? 0 : (savedCount / totalItems).clamp(0, 1);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFD0D7E2)),
+        color: const Color(0xFFF7FAFF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFBFD5FA)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0D0055C8),
+            blurRadius: 18,
+            offset: Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -422,7 +429,7 @@ class _SessionSummaryCard extends StatelessWidget {
               const _OpenBadge(),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 20),
           Row(
             children: [
               Text.rich(
@@ -455,12 +462,12 @@ class _SessionSummaryCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
               value: progress,
-              minHeight: 8,
+              minHeight: 9,
               color: AppColors.appBlue,
               backgroundColor: const Color(0xFFE4E8EF),
             ),
@@ -713,11 +720,22 @@ class _CountItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFD8DEE8)),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: item.hasVariance
+              ? const Color(0xFFF5C58B)
+              : const Color(0xFFD8E0EB),
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A0F172A),
+            blurRadius: 14,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -725,6 +743,20 @@ class _CountItemCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEAF3FF),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.inventory_2_outlined,
+                  color: AppColors.appBlue,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -749,27 +781,94 @@ class _CountItemCard extends StatelessWidget {
                   ],
                 ),
               ),
+              _ItemStatusPill(saved: item.saved),
             ],
           ),
-          const SizedBox(height: 14),
-          Text(
-            'Opening balance: ${_formatQuantity(item.openingBalance)}',
-            style: const TextStyle(
-              color: AppColors.mutedText,
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF4F7FB),
+              borderRadius: BorderRadius.circular(9),
+              border: Border.all(color: const Color(0xFFE1E7EF)),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.balance_outlined,
+                  color: AppColors.mutedText,
+                  size: 20,
+                ),
+                const SizedBox(width: 9),
+                const Text(
+                  'Expected Balance',
+                  style: TextStyle(
+                    color: AppColors.mutedText,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  _formatQuantity(item.openingBalance),
+                  style: const TextStyle(
+                    color: AppColors.darkText,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
+          if (item.hasVariance) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF7ED),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Color(0xFFE36C0A),
+                    size: 19,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Variance ${_formatSignedQuantity(item.quantity - item.openingBalance)}',
+                      style: const TextStyle(
+                        color: Color(0xFFB54708),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
           const Text(
-            'Opening qty',
+            'Counted quantity',
+            style: TextStyle(
+              color: AppColors.darkText,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 3),
+          const Text(
+            'Enter the physical quantity available',
             style: TextStyle(
               color: AppColors.mutedText,
-              fontSize: 15,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Row(
             children: [
               _QuantityStepper(
@@ -808,10 +907,6 @@ class _CountItemCard extends StatelessWidget {
                 ),
               ),
             ),
-          ],
-          if (item.saved) ...[
-            const SizedBox(height: 14),
-            const _SavedLabel(),
           ],
         ],
       ),
@@ -899,7 +994,7 @@ class _QuantityStepperState extends State<_QuantityStepper> {
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: AppColors.darkText,
-                  fontSize: 20,
+                  fontSize: 23,
                   fontWeight: FontWeight.w800,
                 ),
                 decoration: const InputDecoration(
@@ -966,24 +1061,41 @@ class _SaveButton extends StatelessWidget {
   }
 }
 
-class _SavedLabel extends StatelessWidget {
-  const _SavedLabel({Key? key}) : super(key: key);
+class _ItemStatusPill extends StatelessWidget {
+  final bool saved;
+
+  const _ItemStatusPill({Key? key, required this.saved}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
-      children: [
-        Icon(Icons.check_circle, color: AppColors.success, size: 20),
-        SizedBox(width: 8),
-        Text(
-          'Saved',
-          style: TextStyle(
-            color: Color(0xFF079455),
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: saved ? const Color(0xFFEAF8F0) : const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(
+          color: saved ? const Color(0xFFA6E0BC) : const Color(0xFFD5DCE6),
         ),
-      ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            saved ? Icons.check_circle : Icons.edit_outlined,
+            color: saved ? AppColors.success : AppColors.mutedText,
+            size: 14,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            saved ? 'Saved' : 'Not saved',
+            style: TextStyle(
+              color: saved ? const Color(0xFF079455) : AppColors.mutedText,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1208,6 +1320,11 @@ double _roundQuantity(double value) {
 String _formatQuantity(double value) {
   final text = _roundQuantity(value).toStringAsFixed(2);
   return text.replaceFirst(RegExp(r'\.?0+$'), '');
+}
+
+String _formatSignedQuantity(double value) {
+  final formatted = _formatQuantity(value);
+  return value > 0 ? '+$formatted' : formatted;
 }
 
 final TextInputFormatter _quantityInputFormatter =
