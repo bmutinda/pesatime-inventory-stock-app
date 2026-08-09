@@ -4,7 +4,12 @@
       "name": "Default",
       "files": [
         "lib/screens/stock_count/closing/index.dart",
-        ".vscode/changelists.json"
+        "lib/main.dart",
+        "lib/screens/history_detail/index.dart",
+        "lib/screens/movement_summary/index.dart",
+        ".vscode/changelists.json",
+        "lib/services/stock_sessions/index.dart",
+        "lib/data/models/stock_movement_summary.dart"
       ]
     }
   ],

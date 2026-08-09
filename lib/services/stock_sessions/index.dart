@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:inventory_app/data/models/api_response.dart';
 import 'package:inventory_app/data/models/stock_session.dart';
 import 'package:inventory_app/data/models/stock_session_item.dart';
+import 'package:inventory_app/data/models/stock_movement_summary.dart';
 import 'package:inventory_app/helpers/api/index.dart';
 
 abstract class StockSessionService {
@@ -63,6 +64,35 @@ abstract class StockSessionService {
           .whereType<Map<String, dynamic>>()
           .map(StockSessionItem.fromJson)
           .toList();
+    } on DioException catch (error) {
+      throw Exception(ApiUtils.readDioError(error));
+    }
+  }
+
+  static Future<StockMovementSummary> getMovementSummary({
+    required String sessionId,
+    required String lineId,
+  }) async {
+    try {
+      final response = await ApiClient.get<Map<String, dynamic>>(
+        'stock-sessions/$sessionId/items/$lineId/movements/summary',
+      );
+      final apiResponse = ApiResponse.fromJson(response.data);
+
+      if (apiResponse == null || !apiResponse.success) {
+        throw Exception(
+          apiResponse?.message.isEmpty ?? true
+              ? 'Unable to load movement summary.'
+              : apiResponse!.message,
+        );
+      }
+
+      final data = apiResponse.data;
+      if (data is! Map<String, dynamic>) {
+        throw Exception('Unable to load movement summary.');
+      }
+
+      return StockMovementSummary.fromJson(data);
     } on DioException catch (error) {
       throw Exception(ApiUtils.readDioError(error));
     }

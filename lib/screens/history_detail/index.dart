@@ -168,7 +168,10 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
                         )
                       else
                         for (final item in _items) ...[
-                          _HistoryItemCard(item: item),
+                          _HistoryItemCard(
+                            item: item,
+                            sessionId: _sessionId!,
+                          ),
                           const SizedBox(height: 12),
                         ],
                     ],
@@ -398,8 +401,13 @@ class _RejectionNoteCard extends StatelessWidget {
 
 class _HistoryItemCard extends StatelessWidget {
   final StockSessionItem item;
+  final String sessionId;
 
-  const _HistoryItemCard({Key? key, required this.item}) : super(key: key);
+  const _HistoryItemCard({
+    Key? key,
+    required this.item,
+    required this.sessionId,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -480,6 +488,57 @@ class _HistoryItemCard extends StatelessWidget {
               ),
             ],
             reason: item.varianceReason,
+          ),
+          const SizedBox(height: 12),
+          Material(
+            color: const Color(0xFFEFF4FF),
+            borderRadius: BorderRadius.circular(9),
+            child: InkWell(
+              onTap: () => Navigator.of(context).pushNamed(
+                '/movement-summary',
+                arguments: {
+                  'sessionId': sessionId,
+                  'item': item,
+                },
+              ),
+              borderRadius: BorderRadius.circular(9),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 13,
+                  vertical: 13,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(9),
+                  border: Border.all(color: const Color(0xFFBFD2FA)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.swap_horiz_rounded,
+                      color: AppColors.appBlue,
+                      size: 22,
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'View Movements Summary',
+                        style: TextStyle(
+                          color: AppColors.appBlue,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: AppColors.appBlue,
+                      size: 17,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),

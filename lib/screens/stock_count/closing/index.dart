@@ -150,6 +150,8 @@ class _ClosingStockScreenState extends State<ClosingStockScreen> {
                             onQuantityChanged: (value) =>
                                 _updateQuantity(index, value),
                             onSave: () => _saveItem(index),
+                            onMovementsPressed: () =>
+                                _openMovementSummary(index),
                             onReasonSelected: (reason) =>
                                 _selectReason(index, reason),
                           ),
@@ -239,6 +241,17 @@ class _ClosingStockScreenState extends State<ClosingStockScreen> {
   void _clearSearch() {
     _searchController.clear();
     _updateSearchQuery('');
+  }
+
+  void _openMovementSummary(int index) {
+    FocusManager.instance.primaryFocus?.unfocus();
+    Navigator.of(context).pushNamed(
+      '/movement-summary',
+      arguments: {
+        'sessionId': _sessionId,
+        'item': _items[index].sessionItem,
+      },
+    );
   }
 
   Future<void> _saveItem(int index) async {
@@ -802,6 +815,7 @@ class _CountItemCard extends StatelessWidget {
   final VoidCallback onIncrease;
   final ValueChanged<double> onQuantityChanged;
   final VoidCallback onSave;
+  final VoidCallback onMovementsPressed;
   final ValueChanged<String> onReasonSelected;
 
   const _CountItemCard({
@@ -811,6 +825,7 @@ class _CountItemCard extends StatelessWidget {
     required this.onIncrease,
     required this.onQuantityChanged,
     required this.onSave,
+    required this.onMovementsPressed,
     required this.onReasonSelected,
   }) : super(key: key);
 
@@ -869,6 +884,51 @@ class _CountItemCard extends StatelessWidget {
                 icon: Icons.balance_outlined,
                 label: 'Expected Closing Balance',
                 value: _formatQuantity(item.expected),
+              ),
+              const SizedBox(height: 10),
+              Material(
+                color: const Color(0xFFEFF4FF),
+                borderRadius: BorderRadius.circular(9),
+                child: InkWell(
+                  onTap: onMovementsPressed,
+                  borderRadius: BorderRadius.circular(9),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 13,
+                      vertical: 13,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(9),
+                      border: Border.all(color: const Color(0xFFBFD2FA)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(
+                          Icons.swap_horiz_rounded,
+                          color: AppColors.appBlue,
+                          size: 22,
+                        ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'View Movements Summary',
+                            style: TextStyle(
+                              color: AppColors.appBlue,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          color: AppColors.appBlue,
+                          size: 17,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -1808,6 +1868,7 @@ class _MetaLine extends StatelessWidget {
 }
 
 class _CountItem {
+  final StockSessionItem sessionItem;
   final String lineId;
   final String name;
   final String sku;
@@ -1819,6 +1880,7 @@ class _CountItem {
   String? reason;
 
   _CountItem({
+    required this.sessionItem,
     required this.lineId,
     required this.name,
     required this.sku,
@@ -1837,6 +1899,7 @@ class _CountItem {
     final double variance = _roundQuantity(item.varianceQty);
 
     return _CountItem(
+      sessionItem: item,
       lineId: item.id,
       name: item.name,
       sku: item.sku,
@@ -1851,6 +1914,7 @@ class _CountItem {
 
   _CountItem copy() {
     return _CountItem(
+      sessionItem: sessionItem,
       lineId: lineId,
       name: name,
       sku: sku,

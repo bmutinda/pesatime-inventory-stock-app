@@ -5,6 +5,7 @@ import 'package:inventory_app/screens/history_detail/index.dart';
 import 'package:inventory_app/screens/home/index.dart';
 import 'package:inventory_app/screens/login/index.dart';
 import 'package:inventory_app/screens/login/pin.dart';
+import 'package:inventory_app/screens/movement_summary/index.dart';
 import 'package:inventory_app/screens/splash/index.dart';
 import 'package:inventory_app/screens/stock_count/closing/index.dart';
 import 'package:inventory_app/screens/stock_count/opening/index.dart';
@@ -39,6 +40,7 @@ class MyApp extends StatelessWidget {
         '/closing-stock': (context) => const ClosingStockScreen(),
         '/closing-review': (context) => const ClosingReviewScreen(),
         '/history-detail': (context) => const HistoryDetailScreen(),
+        '/movement-summary': (context) => const MovementSummaryScreen(),
         '/submission-success': (context) => const SubmissionSuccessScreen(),
       },
       theme: ThemeData(
