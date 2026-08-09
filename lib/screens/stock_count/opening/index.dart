@@ -1182,7 +1182,9 @@ class _CountItem {
       openingBalance: _roundQuantity(item.openingBalance),
       quantity: _roundQuantity(item.openingQty),
       saved: item.openingQty > 0,
-      reason: item.varianceReason.isEmpty ? null : item.varianceReason,
+      reason: item.openingVarianceReason.isEmpty
+          ? null
+          : item.openingVarianceReason,
     );
   }
 

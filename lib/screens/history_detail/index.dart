@@ -85,7 +85,11 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
   Widget build(BuildContext context) {
     final session = _session;
     final itemCount = _items.length;
-    final varianceCount = _items.where((item) => item.varianceQty != 0).length;
+    final varianceCount = _items
+        .where(
+          (item) => item.openingVariance != 0 || item.varianceQty != 0,
+        )
+        .length;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -375,35 +379,32 @@ class _HistoryItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final variance = item.varianceQty;
-
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0xFFD8DEE8)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 10,
+            offset: Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  item.name,
-                  style: const TextStyle(
-                    color: AppColors.darkText,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              _VarianceBadge(variance: variance),
-            ],
+          Text(
+            item.name,
+            style: const TextStyle(
+              color: AppColors.darkText,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             'SKU: ${item.sku}',
             style: const TextStyle(
@@ -412,25 +413,50 @@ class _HistoryItemCard extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _Quantity(label: 'Opening', value: _formatQty(item.openingQty)),
-              _Quantity(label: 'Closing', value: _formatQty(item.closingQty)),
-              _Quantity(label: 'Variance', value: _formatQty(variance)),
-            ],
-          ),
-          if (variance != 0 && item.varianceReason.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text(
-              'Reason: ${item.varianceReason}',
-              style: const TextStyle(
-                color: AppColors.mutedText,
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
+          const SizedBox(height: 16),
+          _StockPhaseSection(
+            title: 'Opening',
+            color: AppColors.appBlue,
+            counted: item.openingCounted,
+            values: [
+              _DetailValue(
+                label: 'Balance',
+                value: _formatQty(item.openingBalance),
               ),
-            ),
-          ],
+              _DetailValue(
+                label: 'Quantity',
+                value: _formatQty(item.openingQty),
+              ),
+              _DetailValue(
+                label: 'Variance',
+                value: _formatSignedQty(item.openingVariance),
+                valueColor: _varianceColor(item.openingVariance),
+              ),
+            ],
+            reason: item.openingVarianceReason,
+          ),
+          const SizedBox(height: 12),
+          _StockPhaseSection(
+            title: 'Closing',
+            color: const Color(0xFF6941C6),
+            counted: item.closingCounted,
+            values: [
+              _DetailValue(
+                label: 'Expected qty',
+                value: _formatQty(item.expectedClosingQty),
+              ),
+              _DetailValue(
+                label: 'Quantity',
+                value: _formatQty(item.closingQty),
+              ),
+              _DetailValue(
+                label: 'Variance',
+                value: _formatSignedQty(item.varianceQty),
+                valueColor: _varianceColor(item.varianceQty),
+              ),
+            ],
+            reason: item.varianceReason,
+          ),
         ],
       ),
     );
@@ -442,6 +468,194 @@ class _HistoryItemCard extends StatelessWidget {
     }
 
     return value.toStringAsFixed(2);
+  }
+
+  String _formatSignedQty(double value) {
+    final formatted = _formatQty(value);
+    return value > 0 ? '+$formatted' : formatted;
+  }
+
+  Color _varianceColor(double variance) {
+    if (variance == 0) return AppColors.success;
+    return variance > 0 ? const Color(0xFFE36C0A) : const Color(0xFFE11D48);
+  }
+}
+
+class _StockPhaseSection extends StatelessWidget {
+  final String title;
+  final Color color;
+  final bool counted;
+  final List<_DetailValue> values;
+  final String reason;
+
+  const _StockPhaseSection({
+    Key? key,
+    required this.title,
+    required this.color,
+    required this.counted,
+    required this.values,
+    required this.reason,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final trimmedReason = reason.trim();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 4,
+                height: 18,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: AppColors.darkText,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: counted
+                      ? const Color(0xFFEAF8F0)
+                      : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(99),
+                  border: Border.all(
+                    color: counted
+                        ? const Color(0xFFA6E0BC)
+                        : const Color(0xFFCBD5E1),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      counted ? Icons.check_circle : Icons.schedule,
+                      size: 14,
+                      color: counted ? AppColors.success : AppColors.mutedText,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      counted ? 'Counted' : 'Not counted',
+                      style: TextStyle(
+                        color: counted
+                            ? const Color(0xFF079455)
+                            : AppColors.mutedText,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (int index = 0; index < values.length; index++) ...[
+                Expanded(child: values[index]),
+                if (index < values.length - 1) const SizedBox(width: 8),
+              ],
+            ],
+          ),
+          if (trimmedReason.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    const TextSpan(
+                      text: 'Reason: ',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    TextSpan(text: trimmedReason),
+                  ],
+                ),
+                style: const TextStyle(
+                  color: AppColors.mutedText,
+                  fontSize: 13,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _DetailValue extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  const _DetailValue({
+    Key? key,
+    required this.label,
+    required this.value,
+    this.valueColor,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: AppColors.mutedText,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: valueColor ?? AppColors.darkText,
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -549,41 +763,6 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _Quantity extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _Quantity({Key? key, required this.label, required this.value})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.mutedText,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              color: AppColors.darkText,
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _MetaLine extends StatelessWidget {
   final IconData icon;
   final String text;
@@ -637,51 +816,5 @@ class _StatusPill extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _VarianceBadge extends StatelessWidget {
-  final double variance;
-
-  const _VarianceBadge({Key? key, required this.variance}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final bool positive = variance > 0;
-    final bool neutral = variance == 0;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: neutral
-            ? const Color(0xFFEAF8F0)
-            : positive
-                ? const Color(0xFFFFF3E6)
-                : const Color(0xFFFDECEF),
-        borderRadius: BorderRadius.circular(7),
-      ),
-      child: Text(
-        neutral
-            ? 'No variance'
-            : 'Variance ${positive ? '+' : ''}${_formatQty(variance)}',
-        style: TextStyle(
-          color: neutral
-              ? const Color(0xFF079455)
-              : positive
-                  ? const Color(0xFFE36C0A)
-                  : const Color(0xFFE11D48),
-          fontSize: 13,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-
-  String _formatQty(double value) {
-    if (value == value.roundToDouble()) {
-      return value.round().toString();
-    }
-
-    return value.toStringAsFixed(2);
   }
 }
