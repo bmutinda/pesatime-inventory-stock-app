@@ -244,19 +244,22 @@ class _ClosingStockScreenState extends State<ClosingStockScreen> {
   Future<void> _saveItem(int index) async {
     final sessionId = _sessionId;
     if (sessionId == null || sessionId.isEmpty) return;
+    final item = _items[index];
 
     try {
       await StockSessionService.submitClosingQty(
         sessionId: sessionId,
-        lineId: _items[index].lineId,
-        closingQty: _items[index].quantity,
-        varianceReason: _items[index].reason,
+        lineId: item.lineId,
+        closingQty: item.quantity,
+        varianceReason: item.reason,
       );
 
       if (!mounted) return;
       setState(() {
         _items[index].saved = true;
       });
+      FocusManager.instance.primaryFocus?.unfocus();
+      _showSavedToast('${item.name} saved');
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -268,6 +271,30 @@ class _ClosingStockScreenState extends State<ClosingStockScreen> {
           ),
         );
     }
+  }
+
+  void _showSavedToast(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white, size: 20),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF079455),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
   }
 
   void _selectReason(int index, String reason) {

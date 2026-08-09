@@ -302,10 +302,36 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
       setState(() {
         _items[index].saved = true;
       });
+      FocusManager.instance.primaryFocus?.unfocus();
+      _showSavedToast('${item.name} saved');
     } catch (error) {
       if (!mounted) return;
       _showError(error, fallback: 'Unable to save opening quantity.');
     }
+  }
+
+  void _showSavedToast(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white, size: 20),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF079455),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
   }
 
   void _showError(

@@ -3,7 +3,6 @@
     {
       "name": "Default",
       "files": [
-        ".vscode/changelists.json",
         "lib/screens/stock_count/closing/index.dart",
         "lib/screens/stock_count/opening/index.dart"
       ]
