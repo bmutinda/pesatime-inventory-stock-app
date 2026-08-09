@@ -1293,7 +1293,7 @@ class _CountItem {
       sku: item.sku,
       openingBalance: _roundQuantity(item.openingBalance),
       quantity: _roundQuantity(item.openingQty),
-      saved: item.openingQty > 0,
+      saved: item.openingCounted,
       reason: item.openingVarianceReason.isEmpty
           ? null
           : item.openingVarianceReason,

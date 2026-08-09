@@ -3,11 +3,9 @@
     {
       "name": "Default",
       "files": [
-        "lib/screens/stock_count/opening/index.dart",
-        "lib/screens/history_detail/index.dart",
-        "lib/screens/stock_count/closing/index.dart",
         ".vscode/changelists.json",
-        "pubspec.yaml"
+        "lib/screens/stock_count/closing/index.dart",
+        "lib/screens/stock_count/opening/index.dart"
       ]
     }
   ],

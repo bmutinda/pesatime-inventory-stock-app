@@ -1752,7 +1752,7 @@ class _CountItem {
       opening: openingQty,
       variance: variance,
       reason: item.varianceReason.isEmpty ? null : item.varianceReason,
-      saved: item.closingQty > 0,
+      saved: item.closingCounted,
     );
   }
 
