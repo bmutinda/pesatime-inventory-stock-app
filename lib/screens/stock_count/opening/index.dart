@@ -150,6 +150,8 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
                             onIncrease: () => _changeQuantity(index, 1),
                             onQuantityChanged: (value) =>
                                 _updateQuantity(index, value),
+                            onReasonChanged: (value) =>
+                                _updateReason(index, value),
                             onSave: () => _saveItem(index),
                           ),
                           const SizedBox(height: 14),
@@ -211,7 +213,7 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
         'title': 'Opening stock submitted',
         'store': session.store,
         'items': _items.length,
-        'variances': 0,
+        'variances': _items.where((item) => item.hasVariance).length,
       },
     );
   }
@@ -220,6 +222,9 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
     setState(() {
       final double nextValue = _items[index].quantity + change;
       _items[index].quantity = _roundQuantity(nextValue < 0 ? 0 : nextValue);
+      if (!_items[index].hasVariance) {
+        _items[index].reason = null;
+      }
       _items[index].saved = false;
     });
   }
@@ -227,6 +232,16 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
   void _updateQuantity(int index, double value) {
     setState(() {
       _items[index].quantity = _roundQuantity(value < 0 ? 0 : value);
+      if (!_items[index].hasVariance) {
+        _items[index].reason = null;
+      }
+      _items[index].saved = false;
+    });
+  }
+
+  void _updateReason(int index, String value) {
+    setState(() {
+      _items[index].reason = value;
       _items[index].saved = false;
     });
   }
@@ -265,11 +280,22 @@ class _OpeningStockScreenState extends State<OpeningStockScreen> {
     final sessionId = _sessionId;
     if (sessionId == null || sessionId.isEmpty) return;
 
+    final item = _items[index];
+    final reason = item.reason?.trim();
+    if (item.hasVariance && (reason == null || reason.isEmpty)) {
+      _showError(
+        Exception('Enter a reason for the opening stock variance.'),
+        fallback: 'Enter a reason for the opening stock variance.',
+      );
+      return;
+    }
+
     try {
       await StockSessionService.submitOpeningQty(
         sessionId: sessionId,
-        lineId: _items[index].lineId,
-        openingQty: _items[index].quantity,
+        lineId: item.lineId,
+        openingQty: item.quantity,
+        varianceReason: item.hasVariance ? reason : null,
       );
 
       if (!mounted) return;
@@ -671,6 +697,7 @@ class _CountItemCard extends StatelessWidget {
   final VoidCallback onDecrease;
   final VoidCallback onIncrease;
   final ValueChanged<double> onQuantityChanged;
+  final ValueChanged<String> onReasonChanged;
   final VoidCallback onSave;
 
   const _CountItemCard({
@@ -679,6 +706,7 @@ class _CountItemCard extends StatelessWidget {
     required this.onDecrease,
     required this.onIncrease,
     required this.onQuantityChanged,
+    required this.onReasonChanged,
     required this.onSave,
   }) : super(key: key);
 
@@ -724,6 +752,15 @@ class _CountItemCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
+          Text(
+            'Opening balance: ${_formatQuantity(item.openingBalance)}',
+            style: const TextStyle(
+              color: AppColors.mutedText,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
           const Text(
             'Opening qty',
             style: TextStyle(
@@ -745,6 +782,33 @@ class _CountItemCard extends StatelessWidget {
               _SaveButton(onPressed: onSave),
             ],
           ),
+          if (item.hasVariance) ...[
+            const SizedBox(height: 14),
+            TextFormField(
+              key: ValueKey(item.lineId),
+              initialValue: item.reason,
+              onChanged: onReasonChanged,
+              textCapitalization: TextCapitalization.sentences,
+              textInputAction: TextInputAction.done,
+              decoration: InputDecoration(
+                labelText: 'Variance reason',
+                hintText: 'Enter why the opening count differs',
+                filled: true,
+                fillColor: Colors.white,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(7),
+                  borderSide: const BorderSide(color: Color(0xFFD0D7E2)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(7),
+                  borderSide: const BorderSide(
+                    color: AppColors.appBlue,
+                    width: 1.4,
+                  ),
+                ),
+              ),
+            ),
+          ],
           if (item.saved) ...[
             const SizedBox(height: 14),
             const _SavedLabel(),
@@ -1092,24 +1156,33 @@ class _CountItem {
   final String lineId;
   final String name;
   final String sku;
+  final double openingBalance;
   double quantity;
   bool saved;
+  String? reason;
 
   _CountItem({
     required this.lineId,
     required this.name,
     required this.sku,
+    required this.openingBalance,
     required this.quantity,
     this.saved = false,
+    this.reason,
   });
+
+  bool get hasVariance =>
+      _roundQuantity(quantity) != _roundQuantity(openingBalance);
 
   factory _CountItem.fromSessionItem(StockSessionItem item) {
     return _CountItem(
       lineId: item.id,
       name: item.name,
       sku: item.sku,
+      openingBalance: _roundQuantity(item.openingBalance),
       quantity: _roundQuantity(item.openingQty),
       saved: item.openingQty > 0,
+      reason: item.varianceReason.isEmpty ? null : item.varianceReason,
     );
   }
 
@@ -1118,8 +1191,10 @@ class _CountItem {
       lineId: lineId,
       name: name,
       sku: sku,
+      openingBalance: openingBalance,
       quantity: quantity,
       saved: saved,
+      reason: reason,
     );
   }
 }

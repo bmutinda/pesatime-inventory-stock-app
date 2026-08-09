@@ -72,11 +72,16 @@ abstract class StockSessionService {
     required String sessionId,
     required String lineId,
     required double openingQty,
+    String? varianceReason,
   }) async {
     try {
       final response = await ApiClient.put<Map<String, dynamic>>(
         'stock-sessions/$sessionId/items/$lineId/opening',
-        data: {'opening_qty': openingQty},
+        data: {
+          'opening_qty': openingQty,
+          if (varianceReason != null && varianceReason.isNotEmpty)
+            'variance_reason': varianceReason,
+        },
       );
       final apiResponse = ApiResponse.fromJson(response.data);
 
