@@ -3,13 +3,14 @@
     {
       "name": "Default",
       "files": [
-        "lib/screens/stock_count/closing/index.dart",
-        "lib/main.dart",
-        "lib/screens/history_detail/index.dart",
-        "lib/screens/movement_summary/index.dart",
         ".vscode/changelists.json",
-        "lib/services/stock_sessions/index.dart",
-        "lib/data/models/stock_movement_summary.dart"
+        "android/key.properties.example",
+        "android/app/build.gradle",
+        "android/app/src/profile/AndroidManifest.xml",
+        "android/app/src/main/kotlin/com/pesatime/pos/owner/MainActivity.kt",
+        "android/app/src/main/kotlin/com/pesatime/inventory/stock_app/MainActivity.kt",
+        ".vscode/settings.json",
+        "android/app/src/debug/AndroidManifest.xml"
       ]
     }
   ],

@@ -1,4 +1,4 @@
-package com.pesatime.pos.owner
+package com.pesatime.inventory.stock_app
 
 import io.flutter.embedding.android.FlutterActivity
 
